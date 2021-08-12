@@ -87,6 +87,19 @@ DEG_results_list <- lapply(results, function(x){
   x
 })
 names(DEG_results_list)
+
+#get average counts per group
+counts <- counts(dds,normalized=TRUE)
+pheno <- colData(dds)
+averageCounts <-data.frame(DMSO_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DMSO",])]), 
+    DAC_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DAC",])]),
+    SB939_Rep3_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="SB939",])]),
+    DACandSB939_Rep3_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DACandSB939",])]))
+DEG_results_list <- lapply(DEG_results_list, function(x){
+    x <- cbind(x, averageCounts)
+    x
+})
+
 #add complete annotation
 anno_transcripts <- anno[anno$type =="transcript",]
 anno_genes_sub <- unique(as.data.frame(anno_transcripts)[, c("seqnames", "start", "end","strand","gene_id", "transcript_id", "dist_nearest_repeat", "nearest_repeat_repName", "nearest_repeat_repClass", "nearest_repeat_repFamily","nearest_LTR12repeat_repName","dist_nearest_LTR12repeat")])
@@ -95,6 +108,7 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
   rownames(x)<- x$transcript_id
   x
 })
+
 #add original reference annotation
 anno_original_sub <- unique(as.data.frame(anno_original)[, c("transcript_id","transcript_type","gene_name" )])
 DEG_results_list <- lapply(DEG_results_list, function(x){
@@ -102,6 +116,7 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
   rownames(x)<- x$transcript_id
   x
 })
+
 #order by padjusted value
 DEG_results_list <- lapply(DEG_results_list, function(x){
   x[which(is.na(x$padj)),]$padj <- 1
@@ -122,6 +137,8 @@ DEG_results_list$DMSO_vs_SB939 <- NULL
 DEG_results_list$DACandSB939_vs_DMSO <- DEG_results_list$DMSO_vs_DACandSB939
 DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange <- -(DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange)
 DEG_results_list$DMSO_vs_DACandSB939 <- NULL
+
+
 
 #save lists
 saveRDS(DEG_results_list, file.path(PostDE.dir, "DEG_results_group_list.rds"))
