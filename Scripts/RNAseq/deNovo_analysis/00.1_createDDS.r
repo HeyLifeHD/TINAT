@@ -43,4 +43,4 @@ table(idx)
 
 #Running the DESEQ
 dds <- DESeq(dds)
-saveRDS(dds, file.path(results.dir,"dds.rds")))
+saveRDS(dds, file.path(results.dir,"dds.rds"))
