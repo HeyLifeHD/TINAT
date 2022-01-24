@@ -1,0 +1,65 @@
+//Profile config names for nf-core/configs
+params {
+  config_profile_description = 'ODCF cluster.'
+  config_profile_contact = 'JoschkaHey'
+  config_profile_url = 'https://www.dkfz.de/'
+  max_memory=150.GB
+  max_cpus=128
+  max_time = 48.h
+
+
+  container = 'nfcore/rnaseq:v3.1'
+
+  //to keep negative controls
+  min_mapped_reads = 0
+	skip_bigwig=true
+	skip_stringtie=true
+	skip_qc=true
+  aligner = 'star_rsem'
+  igenomes_base = 's3://ngi-igenomes/igenomes/'
+
+//genomes {
+//    "hg38" {
+//			fasta = "/omics/groups/OE0219/internal/Valentin/genomes/references/Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta"
+//			gtf = "/omics/groups/OE0219/internal/Valentin/genomes/references/Homo_sapiens/GATK/GRCh38/gencode.v39.annotation.gtf.gz"
+//   }
+//  }
+  genome = "hg19"
+
+//  outdir="/omics/groups/OE0219/internal/Valentin/JMMLT/processing/smartseq/ReprocessForVariants"
+//  Custom trimming options
+//  pico = false
+//  clip_r1 = 0
+//  clip_r2 = 0
+//  three_prime_clip_r1 = 0
+// three_prime_clip_r2 = 0
+
+}
+
+
+singularity {
+  enabled = true
+  cacheDir = '/omics/groups/OE0219/internal/Joschka/singularity/cache'
+  autoMounts = true
+}
+
+process {
+  executor = 'lsf'
+  submitRateLimit = '5 sec'
+
+  queue = {task.time <= 10.m ? 'short' : task.time <= 1.h ? 'medium' : task.time <= 10.h ? 'long' : 'verylong'}
+  errorStrategy = 'retry'
+  maxRetries = 5
+  perJobMemLimit=150.GB
+
+  withName:makeSTARindex {
+    memory = "64.GB"
+    cpus = 32
+  }
+  withName:STAR {
+    memory = "64.GB"
+  }
+}
+plugins {
+	id 'nf-amazon'
+}
