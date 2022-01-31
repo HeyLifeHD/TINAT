@@ -13,13 +13,13 @@ cp /icgc/dkfzlsdf/analysis/C010/repguide/201207_RNAseq_processing_hg19_incl_gRNA
 
 #start pipeline
 /icgc/dkfzlsdf/analysis/C010/nextflow/nextflow \
--c  /omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification/project_specific.config \
+-resume -c /omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification/project_specific.config \
 run /icgc/dkfzlsdf/analysis/C010/nextflow/rnaseq-master/main.nf  \
 --outdir /omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification \
 --reverseStranded  --pairedEnds  \
 --fasta /icgc/dkfzlsdf/analysis/C010/genomes/Hsapiens/hg19/seq/hg19.fa \
 --gtf /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.gtf \
--profile cluster_odcf  --skip_genebody_coverage -resume
+-profile cluster_odcf  --skip_genebody_coverage 
 
 
 #copy transcript files into their own folder named by sample

@@ -217,7 +217,7 @@ for (i in names(DEG_results_list_plot)){
           color = "col",palette=col,shape = 16, size = 1.5, # Points color, shape and size
           add.params = list(color = "grey", fill = "lightgray") #legend.title="Significance",# Customize reg. line
           #label="SYMBOL", repel = TRUE#, legend = "right",
-) +geom_hline(yintercept=c(-lfc,lfc), linetype = 2) + rremove("legend")
+)  + rremove("legend")
   pdf(file.path(PostDE.dir,i,"MA.pdf"))
   print(MAs[[i]])
   dev.off()

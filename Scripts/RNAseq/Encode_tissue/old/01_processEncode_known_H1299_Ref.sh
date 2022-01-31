@@ -40,7 +40,7 @@ nano /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Re
 cp  /omics/groups/OE0219/internal/tinat/Encode/220114_Encode_processing/design.csv /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref_starSalmon/
 
 export NXF_HOME=/omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref_starSalmon
-nextflow run nf-core/rnaseq -profile singularity -c rnaseq.config \
+nextflow run nf-core/rnaseq -profile s)ingularity -c rnaseq.config \
     --input /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref_starSalmon/design.csv \
     --outdir /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref_starSalmon/ \
     --fasta /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.fa \
