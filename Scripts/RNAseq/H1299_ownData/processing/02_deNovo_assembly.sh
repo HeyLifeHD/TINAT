@@ -31,6 +31,9 @@ gffcompare -R -r /omics/groups/OE0219/internal/tinat/raw_data_repo/references/ge
 #sort gff compare
 /home/heyj/tools/gff3sort/gff3sort.pl /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.gtf  >/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.sorted.gtf
 
+#subset based on strnads
+/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.gtf
+awk '($7 == "+" || $7 == "-")' /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.gtf > /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_sub.gtf
 
 #run ORF prediction
 base.dir<- "/omics/groups/OE0219/internal/tinat/210712_shortRead_processing_knownRef_analysis/"

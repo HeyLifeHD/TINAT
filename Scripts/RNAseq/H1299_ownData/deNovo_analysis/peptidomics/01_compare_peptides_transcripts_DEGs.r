@@ -27,7 +27,7 @@ anno_original <-  readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/ref
 anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.mergedTranscripts.gtf.tmap"))
 
 #peptidomics list
-peptides <- as.data.frame(readxl::read_excel("/omics/groups/OE0219/internal/tinat/integration/peptidomics/data/FinalFasta_Auswertung_HLA.xlsx"))
+peptides <- as.data.frame(readxl::read_excel("/omics/groups/OE0219/internal/tinat/integration/peptidomics/data/FinalFasta_new_all_Peptides.xlsx"))
 
 #Set specifications
 alpha <- 0.01 #set FDR cutoff
@@ -74,10 +74,13 @@ write.table(peptides_new, file.path(output.dir, "peptides_list_new.tsv"), sep="\
 
 
 nrow(peptides[peptides$DAC_SB==100 & peptides$DMSO ==0,])
-length(unique(peptides_new[peptides_new$DAC_SB==100 & peptides_new$DMSO ==0,]$sequences))
+length(unique(peptides[peptides$DAC_SB==100 & peptides$DMSO ==0 ,]$sequences))
+peptides_ORF <- peptides[peptides$Species =="ORFs",]
+
+length(unique(peptides_ORF[peptides_ORF$DAC_SB==100 & peptides_ORF$DMSO ==0,]$sequences))
 
 #subset peptides that originatee from our orf list
-peptides_new_ORF <- peptides_new[grep("ORF", peptides_new$accession_new),]
+peptides_new_ORF <- peptides_new[peptides_new$Species =="ORFs",]
 length(unique(peptides_new_ORF[peptides_new_ORF$DAC_SB==100 & peptides_new_ORF$DMSO ==0,]$sequences))
 length(unique(peptides_new_ORF[peptides_new_ORF$DAC_SB==100 & peptides_new_ORF$DMSO ==0,]$transcript_id))
 
@@ -247,11 +250,11 @@ for (i in names(class_code_simple_stat)){
 }
 
 
-pdf(file.path(output.dir, "Pie_DAC_SB_peptide_origin_Class_code_simple_ORFs_differentOrder.pdf"), width=10, height=4)
+pdf(file.path(output.dir, "Pie_DAC_SB_peptide_origin_Class_code_simple_ORFs_differentOrder.pdf"), width=4, height=10)
     ggarrange(pie$"DACandSB939_vs_DMSO"$"DAC_SB33",  pie$"DACandSB939_vs_DMSO"$"DAC_SB66", pie$"DACandSB939_vs_DMSO"$"DAC_SB100",  
         common.legend = TRUE,
-        #labels = names(pie[[1]]),
-        ncol = 3, nrow = 1
+        labels =c("1/3 DAC + SB939 unique", "2/3 DAC + SB939 unique", "3/3 DAC + SB939 unique"),
+        ncol = 1, nrow = 3
         )
 dev.off()
 
@@ -278,11 +281,11 @@ for (i in names(ERE_simple_stat)){
 }
 
 
-pdf(file.path(output.dir, "Pie_DAC_SB_peptide_origin_EREanno_simple_ORFs_differentOrder.pdf"), width=10, height=4)
+pdf(file.path(output.dir, "Pie_DAC_SB_peptide_origin_EREanno_simple_ORFs_differentOrder.pdf"), width=4, height=10)
     ggarrange(pie$"DACandSB939_vs_DMSO"$"DAC_SB33",  pie$"DACandSB939_vs_DMSO"$"DAC_SB66", pie$"DACandSB939_vs_DMSO"$"DAC_SB100",  
         common.legend = TRUE,
-        #labels = names(pie[[1]]),
-        ncol = 3, nrow = 1
+        labels = c("1/3 DAC + SB939 unique", "2/3 DAC + SB939 unique", "3/3 DAC + SB939 unique"),
+        ncol = 1, nrow = 3
         )
 dev.off()
 

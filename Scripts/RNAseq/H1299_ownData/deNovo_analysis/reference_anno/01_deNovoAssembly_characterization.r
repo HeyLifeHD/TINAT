@@ -29,13 +29,24 @@ gene_trans_numbers <- data.frame(assembly=c("genecode","deNovo"),
 gene_trans_numbers <- reshape2::melt(gene_trans_numbers)
 gene_trans_numbers$assembly <- factor(gene_trans_numbers$assembly, ordered = TRUE, 
 levels = c("genecode", "deNovo"))
+
 #plotting
 pal <- c("darkgray", "orange")
 names(pal)<- c("genecode", "deNovo")
 font_size <- c(16,"plain", "black")
-pdf(file.path(output.dir, "number_genes_transcripts.pdf"), height=7, width=7)
+pdf(file.path(output.dir, "number_genes_transcripts_log10.pdf"), height=5, width=5)
 ggbarplot(gene_trans_numbers, x="variable", y="value",
-    fill="assembly", color="assembly", palette=pal,yscale="log10",
+    fill="assembly", palette=pal,yscale="log10",#color="assembly", 
+    ylab="Number", label=TRUE, position = position_dodge(0.8),
+    legend.title="Assembly",
+    font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
+    )    +
+    rremove("legend.title") +
+    rremove("xlab")
+dev.off()
+pdf(file.path(output.dir, "number_genes_transcripts.pdf"), height=5, width=5)
+ggbarplot(gene_trans_numbers, x="variable", y="value",
+    fill="assembly", palette=pal,# color="assembly",
     ylab="Number", label=TRUE, position = position_dodge(0.8),
     legend.title="Assembly",
     font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
@@ -59,20 +70,28 @@ trans_class <- as.data.frame(table(anno_classi$class_code_simple))
 pal <- c("darkgray", "orange", "tomato3")
 names(pal)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
 class_plot <- ggbarplot(trans_class, x="Var1", y="Freq",
-    fill="Var1", color="Var1", palette=pal,yscale="log10",lab.pos="out",
+    fill="Var1",  palette=pal,yscale="log10",lab.pos="out",#color="Var1",
     ylab="Number of transcripts", label=TRUE, order=trans_class[order(trans_class$Freq, decreasing=TRUE),]$Var1,
     font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
     )    +
     rotate()+
     rremove("legend") +
     rremove("ylab")
-pdf(file.path(output.dir, "transcript_classification_simplified.pdf"))
+pdf(file.path(output.dir, "transcript_classification_simplified.pdf"), height=5, width=5 )
 print(class_plot)
+dev.off()
+
+labs <- paste0(trans_class$Freq)
+class_plot_pie <- ggpie(trans_class, "Freq", label = labs,legend="right",
+        lab.pos = "in", lab.font = "black",label.size = 16, palette=pal,
+        fill = "Var1", color = "black")+rremove("legend.title")
+pdf(file.path(output.dir, "transcript_classification_simplified_pie.pdf"), height=5, width=5)
+print(class_plot_pie)
 dev.off()
 
 #get number of exons
 exon_plot <- ggboxplot(anno_classi, x="class_code_simple", y="num_exons",
-    fill="class_code_simple", color="class_code_simple", palette=pal,
+    fill="class_code_simple",  palette=pal,#color="class_code_simple",
     ylab="Number of exons", order=trans_class[order(trans_class$Freq, decreasing=TRUE),]$Var1,
     outlier.shape=NA,
     font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
@@ -81,14 +100,41 @@ exon_plot <- ggboxplot(anno_classi, x="class_code_simple", y="num_exons",
     rremove("ylab") +
     coord_flip() +
     ylim(c(0,40))
-pdf(file.path(output.dir, "transcript_exon_number_simplified.pdf"))
+pdf(file.path(output.dir, "transcript_exon_number_simplified.pdf"), height=5, width=5)
 print(exon_plot)
 dev.off()
 
+
+#get length of transcripts
+transcripts_width <- data.frame(transcript_id=anno[anno$type=="transcript",]$transcript_id, width=width(anno[anno$type=="transcript",]))
+anno_classi$transcript_id <- anno_classi$qry_id
+anno_classi <- dplyr::left_join(anno_classi, transcripts_width, by="transcript_id")
+anno_classi$width <- anno_classi$width/1000
+
+length_plot <- ggboxplot(anno_classi, x="class_code_simple", y="width",
+    fill="class_code_simple",  palette=pal,#color="class_code_simple",
+    ylab="Length of transcripts [kbp]", order=trans_class[order(trans_class$Freq, decreasing=TRUE),]$Var1,
+    outlier.shape=NA,
+    font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
+    )    +
+    rremove("legend") +
+    rremove("ylab") +
+    coord_flip() +#
+   ylim(c(0,200))
+pdf(file.path(output.dir, "transcript_length_simplified.pdf"), height=5, width=5)
+print(length_plot)
+dev.off()
+
 #combined plot
-pdf(file.path(output.dir, "transcript_anno_classCode_simple_exonNum_combined.pdf"), width=14)
-ggarrange(class_plot, exon_plot+rremove("y.text"), common.legend = FALSE,
-          ncol = 2, nrow = 1, widths=c(1.5,1))
+pdf(file.path(output.dir, "transcript_anno_classCode_simple_length_exonNum_combined.pdf"), width=10, height=5)
+ggarrange(class_plot, length_plot+rremove("y.text"), exon_plot+rremove("y.text"), common.legend = FALSE,
+          ncol = 3, nrow = 1, widths=c(1.5,1,1)
+          )
+dev.off()
+pdf(file.path(output.dir, "transcript_anno_classCodePie_simple_length_exonNum_combined.pdf"), width=10, height=5)
+ggarrange(class_plot_pie+rremove("legend"), length_plot, exon_plot+rremove("y.text"), common.legend = FALSE,
+          ncol = 3, nrow = 1, widths=c(1,1.5,1)
+          )
 dev.off()
 
 #plot mono or multi exonic in pie chart
@@ -101,20 +147,32 @@ pal <- c("darkgray", "whitesmoke")
 names(pal)<- c("multi-exonic", "mono-exonic")
 labs <- paste0(exon_class[["non-chimeric (novel)"]]$Freq)
 non_chimeric <- ggpie(exon_class[["non-chimeric (novel)"]], "Freq", label = labs,
-        lab.pos = "in", lab.font = "black",label.size = 16, palette=pal,
-        fill = "Var1", color = "white")
+        lab.pos = "in", lab.font = "black", palette=pal,#label.size = 16,
+        fill = "Var1", color = "black")+rremove("legend.title")
 labs <- paste0(exon_class[["chimeric (novel)"]]$Freq)
 chimeric <- ggpie(exon_class[["chimeric (novel)"]], "Freq", label = labs,
-        lab.pos = "in", lab.font = "black",label.size = 16, palette=pal,
-        fill = "Var1", color = "white")
+        lab.pos = "in", lab.font = "black", palette=pal,#label.size = 16,
+        fill = "Var1", color = "black")+rremove("legend.title")
 labs <- paste0(exon_class[["known"]]$Freq)
 known <- ggpie(exon_class[["known"]], "Freq", label = labs,
-        lab.pos = "in", lab.font = "black",label.size = 16, palette=pal,
-        fill = "Var1", color = "white")
-
-pdf(file.path(output.dir, "Exon_class.pdf"), width=4)
-    print(ggarrange(non_chimeric, chimeric,known,  common.legend = TRUE,
+        lab.pos = "in", lab.font = "black", palette=pal,#label.size = 16,
+        fill = "Var1", color = "black")+rremove("legend.title")
+pies <- ggarrange(non_chimeric, chimeric,known,  common.legend = TRUE,
           #labels = c("non-chimeric (novel)", "chimeric (novel)", "known"),
           ncol = 1, nrow = 3
-          ))
+          )
+pdf(file.path(output.dir, "Exon_class.pdf"), width=5)
+    print(pies)
 dev.off()
+
+pdf(file.path(output.dir, "transcript_anno_classCodePie_simple_length_exonNum_exonPies_combined.pdf"), width=15, height=5)
+ggarrange(class_plot_pie+rremove("legend"), length_plot, exon_plot+rremove("y.text"),pies, common.legend = FALSE,
+          ncol = 4, nrow = 1, widths=c(1,2.5,1.5,1)
+          )
+dev.off()
+
+pdf(file.path(output.dir, "transcript_anno_classCodePie_simple_length_exonNum_exonPies_combined_v2.pdf"), width=15, height=5)
+ggarrange(class_plot_pie+rremove("legend"), length_plot, exon_plot+rremove("y.text"),pies, common.legend = FALSE,
+          ncol = 4, nrow = 1, widths=c(1,2.5,1.5,1),labels=c("a", "b", "c", "d")
+          )
+dev.off() 

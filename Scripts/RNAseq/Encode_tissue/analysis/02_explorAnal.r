@@ -37,7 +37,7 @@ plotPCA.alt <- function (object, intgroup = "condition", ntop = Inf, returnData 
   
 }
 #folder
-base.dir<- "/omics/groups/OE0219/internal/tinat/210712_shortRead_processing_knownRef_analysis/"
+base.dir<- "/omics/groups/OE0219/internal/Encode/220128_deNovo_quantification_H1299ref_analysis/"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
@@ -64,7 +64,7 @@ pcaDatavst<- plotPCA(vst, intgroup =  colnames(anno), returnData =TRUE, ntop=Inf
 percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
 col <- randomcoloR::distinctColorPalette(length(colData(dds)$tissue))
 names(col) <- levels(colData(dds)$tissue)
-pdf(file.path(PreDE.dir, "PCA12.pdf"), height = 5, width = 6)
+pdf(file.path(PreDE.dir, "PCA12.pdf"), height = 6, width = 10)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
             color = "tissue", 
@@ -77,11 +77,11 @@ dev.off()
 #pca of 5000 mv genes
 pcaDatavst<- plotPCA(vst, intgroup =  colnames(anno), returnData =TRUE, ntop=5000)
 percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
-pdf(file.path(PreDE.dir, "PCA12_5000mvGenes.pdf"), height = 5, width = 6)
+pdf(file.path(PreDE.dir, "PCA12_5000mvGenes.pdf"), height = 6, width = 10)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
             color = "tissue", 
-            label= "Replicate",
+           # label= "Replicate",
             repel=TRUE,
             legend = "right",palette=col,
             ellipse = F ,mean.point = FALSE,
@@ -91,11 +91,11 @@ dev.off()
 #function to plot PC2 and 3
 pcaDatavst.alt<- plotPCA.alt(vst, intgroup = colnames(anno), returnData =TRUE, ntop=Inf)
 percentvarvst.alt <- round(100* attr(pcaDatavst.alt, "percentVar"))
-pdf(file.path(PreDE.dir, "PCA23.pdf"), height = 5, width = 6)
+pdf(file.path(PreDE.dir, "PCA23.pdf"), height = 6, width = 10)
 ggscatter(pcaDatavst.alt, x="PC2", y="PC3",            
             size=5,
             color = "tissue", 
-                        label= "Replicate",
+               #         label= "Replicate",
             repel=TRUE,
             legend = "right",palette=col,
           ellipse = F ,mean.point = FALSE,
@@ -105,7 +105,7 @@ dev.off()
 #pca 2 and 3 of 5000 mv genes
 pcaDatavst.alt<- plotPCA.alt(vst, intgroup = colnames(anno), returnData =TRUE, ntop=5000)
 percentvarvst.alt <- round(100* attr(pcaDatavst.alt, "percentVar"))
-pdf(file.path(PreDE.dir, "PCA23_5000mvGenes.pdf"), height = 5, width = 6)
+pdf(file.path(PreDE.dir, "PCA23_5000mvGenes.pdf"), height = 6, width = 10)
 ggscatter(pcaDatavst.alt, x="PC2", y="PC3",            
             size=5,
             color = "tissue", 
@@ -133,7 +133,7 @@ set("labels_cex", .6 )%>%
 set("leaves_pch", 19)%>% 
 set("leaves_cex", 1.5)%>% 
 set("leaves_col", col1)
-pdf(file.path(PreDE.dir, "Clustering_correlation.pdf"), height = 5, width = 5)
+pdf(file.path(PreDE.dir, "Clustering_correlation.pdf"), height = 5, width = 10)
 dend %>% plot
 dev.off()
 

@@ -54,12 +54,14 @@ meta<- meta[meta$"Paired end"==1,]
 rownames(meta)<- meta$sra
 
 #check meta for quality and subset counts
-meta_sub <- meta[meta$"Audit NOT_COMPLIANT" =="",]
-nrow(meta_sub)/nrow(meta)
-meta_sub <- meta[meta$"Audit NOT_COMPLIANT" =="",]
-nrow(meta_sub)/nrow(meta)
-counts_sub <- counts[,colnames(counts)%in% rownames(meta_sub)]
-meta_sub <- meta_sub[colnames(counts_sub),]
+#meta_sub <- meta[meta$"Audit NOT_COMPLIANT" =="",]
+#nrow(meta_sub)/nrow(meta)
+#meta_sub <- meta[meta$"Audit NOT_COMPLIANT" =="",]
+# nrow(meta_sub)/nrow(meta)
+# counts_sub <- counts[,colnames(counts)%in% rownames(meta_sub)]
+# meta_sub <- meta_sub[colnames(counts_sub),]
+counts_sub <- counts[,colnames(counts)%in% rownames(meta)]
+meta_sub <- meta[colnames(counts_sub),]
 
 #prepare sample_anno
 sample_anno <- meta_sub[,c("sra", "Assay", "Biosample term name", "Library made from","Library strand specific",
@@ -88,6 +90,6 @@ table(idx)
 #dim(dds)
 
 #Running the DESEQ
-dds <- DESeq(dds, parallel=TRUE, BPPARAM=MulticoreParam(4))
-saveRDS(dds, file.path(results.dir,"dds.rds"))#
+#dds <- DESeq(dds, parallel=T^RUE, BPPARAM=MulticoreParam(4))
+saveRDS(dds, file.path(results.dir,"dds.rds"))
 
