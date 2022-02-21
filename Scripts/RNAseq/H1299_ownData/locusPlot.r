@@ -338,8 +338,7 @@ for (i in 1:length(roi_new)){
         type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC", fill.histogram=col["DAC"],col.histogram=col["DAC"])
     DACSB_5ac_track <- DataTrack(range = DACSB_5ac, genome = "hg19",
         fontsize=fontSize,fontcolor.title="black",col.axis="black",ylim=ylim_5ac, yTicksAt=yTicksAt_5ac,
-        type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC+SB", fill.histogram=col["DACandSB939"],col.histogram=col["DACandSB939"])
-
+        type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC+SB", fill.histogram=col["DACandSB939"],col.histogram=col["DACandSB939"
      
     #Plot track
     pdf(file.path("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots",paste0(roi_new[i,]$transcript_id, "_locus_","ext_",ext, "_v1.pdf")), width = 12, height = 24)
