@@ -104,7 +104,7 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
 anno_transcripts <- anno[anno$type =="transcript",]
 anno_genes_sub <- unique(as.data.frame(anno_transcripts)[, c("seqnames", "start", "end","strand","gene_id", "transcript_id", "dist_nearest_repeat", "nearest_repeat_repName", "nearest_repeat_repClass", "nearest_repeat_repFamily","nearest_LTR12repeat_repName","dist_nearest_LTR12repeat")])
 DEG_results_list <- lapply(DEG_results_list, function(x){
-  x <- dplyr::left_join(x, anno_genes_sub, by="transcript_id")
+  x <- dplyr::left_join(x[,1:12], anno_genes_sub, by="transcript_id")
   rownames(x)<- x$transcript_id
   x
 })

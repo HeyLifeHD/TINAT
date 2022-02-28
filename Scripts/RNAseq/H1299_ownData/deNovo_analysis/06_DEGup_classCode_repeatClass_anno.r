@@ -127,6 +127,7 @@ DEG_up_anno_split_stats <- lapply(DEG_up_anno, function(x){
     #x$class_code_simple <- sapply(strsplit(rownames(x), ".", fixed=TRUE), "[",1)
     #x
 })
+
 #plot
 pal <- c("deeppink3", "red4", "midnightblue", "gold1", "salmon4")
 names(pal)<-  levels(DEG_up_anno_split_stats$SB939_vs_DMSO$repeat_class)  
@@ -245,9 +246,9 @@ genes2plot <- lapply(DEG_results_list_sub_anno_sub, function(x){
 })
 anno_classi_split_sub <- anno_classi_split[-2]
 genes2plot <- c(genes2plot,list(novel=unlist(anno_classi_split_sub)))
-pdf(file.path(PostDE.dir, "Venn_upDEG_transcript_class_code_simple.pdf"))
-ggVennDiagram::ggVennDiagram(genes2plot) + scale_fill_gradient(low="white",high = hcl.colors(10,"Reds")[10])
-dev.off()
+# pdf(file.path(PostDE.dir, "Venn_upDEG_transcript_class_code_simple.pdf"))
+# ggVennDiagram::ggVennDiagram(genes2plot) + scale_fill_gradient(low="white",high = hcl.colors(10,"Reds")[10])
+# dev.off()
 
 #focus on combined novel class
 #plot class code simple of transcripts of upregualted degs with erg distance 

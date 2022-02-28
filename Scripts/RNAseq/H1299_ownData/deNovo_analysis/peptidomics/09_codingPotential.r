@@ -138,19 +138,61 @@ conda activate RNAmining
 #conda install -c anaconda scikit-learn=0.21.3
 #conda install -c conda-forge xgboost=1.2.0
 #conda install -c conda-forge biopython=1.78
-#install rnamining
-cd tools
-git clone https://gitlab.com/integrativebioinformatics/RNAmining/
-cd RNAmining
-cd  volumes/rnamining-front/assets/scripts/
+# #install rnamining
+# cd tools
+# git clone https://gitlab.com/integrativebioinformatics/RNAmining/
+# cd RNAmining
+# cd  volumes/rnamining-front/assets/scripts/
 
-#run prediction on test data
-head -n 100 /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta > \
-/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_test.fasta
-mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction_test
-python3 rnamining.py -f /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_test.fasta \
-    -organism_name Homo_sapiens -prediction_type coding_prediction -output_folder /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction_test/
+# #run prediction on test data
+# head -n 100 /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta > \
+# /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_test.fasta
+# mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction_test
+# python3 rnamining.py -f /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_test.fasta \
+#     -organism_name Homo_sapiens -prediction_type coding_prediction -output_folder /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction_test/
 
-mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction
-python3 rnamining.py -f /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta \
-    -organism_name Homo_sapiens -prediction_type coding_prediction -output_folder /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction/
+# mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction
+# python3 rnamining.py -f /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta \
+#     -organism_name Homo_sapiens -prediction_type coding_prediction -output_folder /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/coding_prediction/
+
+# #instal cpc2
+# #create biopython conda environment to run cpc2
+# conda create --name biophython
+# conda activate biophython
+# conda install -c conda-forge biopython
+# pip install modules
+# #install cpc
+# cd tools/
+# git clone https://github.com/gao-lab/CPC2_standalone
+# cd CPC2_standalone
+# export CPC_HOME="$PWD"
+# cd libs/libsvm
+# gzip -dc libsvm-3.18.tar.gz | tar xf -
+# cd libsvm-3.18
+# make clean && make
+
+# #run prediction
+# cd $CPC_HOME
+# bin/CPC2.py -i (input_seq) -o (result_in_table)
+
+# #install cpc1
+# conda create --name cpc
+# conda activate cpc
+# conda install -c conda-forge r-ccp 
+
+# #install CPPred
+# #create biopython conda environment to run cpc2
+# conda create --name biophython1.75
+# conda activate biophython1.75
+# conda install -c conda-forge biopython=1.75
+# conda install -c bioconda cpat
+# conda install -c conda-forge libsvm
+
+# #install cppred
+# cd tools/
+# wget http://www.rnabinding.com/CPPred/CPPred/CPPred.tar.gz
+# tar -zxvf CPPred.tar.gz
+# cd CPPred/bin
+# #prediction
+# python CPPred.py -i data/Human_coding_RNA_test.fa -hex Hexamer.tsv -r range -m model -spe species -o result
+# python bin/CPPred.py -i input_RNA.fa -hex Hexamer/Human_Hexamer.tsv -r Human_Model/Human.range -m Human_Model/Human.model -spe Human -o result

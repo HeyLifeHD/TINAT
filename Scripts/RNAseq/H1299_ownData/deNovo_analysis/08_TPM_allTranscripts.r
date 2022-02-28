@@ -41,6 +41,15 @@ anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("s", "x", 
 anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("c", "k", "m", "n", "j", "e", "o"), "chimeric (novel)", anno_classi$class_code_simple)
 anno_classi$transcript_id <- anno_classi$qry_id 
 
+#get color code
+library(RColorBrewer)
+col <- brewer.pal(12, "Paired")
+treat_col <- col[c(4,2,8,6)]
+names(treat_col)<-c("DMSO", "DAC", "SB939",  "DACandSB939")
+class_col <- c("gray", col[c(9,10)])
+names(class_col)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
+ere_col <- col[c(1,12,5,7,3)]
+
 #merge info
 tpm_mean_h1299 <- as.data.frame(tpm_mean_h1299)
 tpm_mean_h1299$transcript_id <- rownames(tpm_mean_h1299)
@@ -53,7 +62,7 @@ pal <- c("darkgray", "orange", "tomato3")
 font_size <- c(16,"plain", "black")
 names(pal)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
 tpm_allTranscripts <- ggboxplot(tpm_mean_h1299_merged_melt, x="variable", y="value",
-    fill="class_code_simple",  palette=pal,lab.pos="out",#color="Var1",
+    fill="class_code_simple",  palette=class_col,lab.pos="out",#color="Var1",
     ylab="TPM",  order=rev(c("DMSO", "SB939", "DAC", "DACandSB939")),outlier.shape=NA,
     font.x=font_size, font.y=font_size, font.legend=font_size, font.xtickslab=font_size, font.tickslab=font_size
     ) +

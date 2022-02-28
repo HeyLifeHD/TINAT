@@ -22,7 +22,6 @@ SB_rnaseq <- import.bw("/omics/groups/OE0219/internal/tinat/210712_shortRead_pro
 DAC_rnaseq <- import.bw("/omics/groups/OE0219/internal/tinat/210712_shortRead_processing_knownRef/bigwig/DAC.normalized.bigWig")
 DACSB_rnaseq <- import.bw("/omics/groups/OE0219/internal/tinat/210712_shortRead_processing_knownRef/bigwig/DACSB939.normalized.bigWig")
 
-
 #cage
 DMSO_cage <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/CAGE/DMSO.bigWig")
 SB_cage <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/CAGE/SB939.bigWig")
@@ -33,49 +32,91 @@ DACSB_cage <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/CAGE/
 DACSB_nanopore <- import.bw("/omics/groups/OE0219/internal/tinat/210709_nanopore_ashish_stringtie_assembly/pipeline-nanopore-ref-isoforms/bigwig/reads_aln_sorted.bw")
 
 #methylation
-DMSO_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150388_H2_DMSO_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
-SB_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150389_H2_SB939_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
-DAC_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150386_H2_DAC_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
-DACSB_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150387_H2_DAC_plus_SB939_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
+DMSO_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150388_H2_DMSO_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
+SB_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150389_H2_SB939_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
+DAC_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150386_H2_DAC_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
+DACSB_meth <- fread("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150387_H2_DAC_plus_SB939_2lanes_merged.CG.ALL.call.gz.BSmooth.csv.gz")
 
-#load chip data
-input.dir <- "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/6_tracks_normalized"
-sample_anno_chip <- fread(file.path(input.dir, "samples.csv"))
-sample_anno_chip$normalizedBigWig <- file.path(input.dir, paste0(sample_anno_chip$"Sample ID",".normalized.bigWig"))
-sample_anno_chip_split <- split(sample_anno_chip,sample_anno_chip$Modification)
-sample_anno_chip_split <- lapply(sample_anno_chip_split, function(x){
-    y <- x$normalizedBigWig
-    names(y) <-x$Treatment
-    y <- y[c("DMSO", "SB", "DAC", "DAC+SB")]
-}
-)
+# #load chip data part 1
+# input.dir <- "/omics/groups/OE0219/internal/tinat/raw_data_repo/set_1/set_1"
+# sample_anno_chip <- fread(file.path(input.dir, "samples.csv"))
+# sample_anno_chip$normalizedBigWig <- file.path(input.dir, paste0(sample_anno_chip$"Sample ID",".normalized.bigWig"))
+# sample_anno_chip_split <- split(sample_anno_chip,sample_anno_chip$Modification)
+# sample_anno_chip_split <- lapply(sample_anno_chip_split, function(x){
+#     y <- x$normalizedBigWig
+#     names(y) <-x$Treatment
+#     y <- y[c("DMSO", "SB", "DAC", "DAC+SB")]
+# }
+# )
+
+# #load chip data part 2
+# input.dir <- "/omics/groups/OE0219/internal/tinat/raw_data_repo/set_1/set_2"
+# files <- list.files(input.dir, pattern="bigWig", full.names=TRUE)
+# sample_anno_chip_split_2 <- list(H3K27ac=files[grep("H3K27ac", files)][c(3,1,5,2)],
+#     H3K4me1=files[grep("H3K4me1", files)][c(3,1,5,2)],  H3K4me3=files[grep("H3K4me3", files)][c(3,1,5,2)],  
+#     H3K9ac=files[grep("H3K9ac", files)][c(3,1,5,2)])
+
+temp2 <- readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/occupancy_matrices_revision.RDS")
+temp1 <- readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/occupancy_matrices.RDS")
 
 #H3K9me3
-DMSO_9me3 <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150368_DMSO_H3K9me3_ATCACG_L002_R1_complete_filtered.fastq.gz.bigWig")
-SB_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150384_SB939_H3K9me3_TTAGGC_L002_R1_complete_filtered.fastq.gz.bigWig")
-DAC_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150352_DAC_H3K9me3_CGATGT_L002_R1_complete_filtered.fastq.gz.bigWig")
-DACSB_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150360_DACSB_H3K9me3_ACTTGA_L002_R1_complete_filtered.fastq.gz.bigWig")
+DMSO_9me3 <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150368_DMSO_H3K9me3_ATCACG_L002_R1_complete_filtered.fastq.gz.bigWig")
+score(DMSO_9me3)<- score(DMSO_9me3)/(sum(score(DMSO_9me3))/1000000)
+export.bw(DMSO_9me3,"/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150368_DMSO_H3K9me3_ATCACG_L002_R1_complete_filtered.fastq.gz.normalized.bigWig" )
+SB_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150384_SB939_H3K9me3_TTAGGC_L002_R1_complete_filtered.fastq.gz.bigWig")
+score(SB_9me3)<- score(SB_9me3)/(sum(score(SB_9me3))/1000000)
+export.bw(SB_9me3,"/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150384_SB939_H3K9me3_TTAGGC_L002_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DAC_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150352_DAC_H3K9me3_CGATGT_L002_R1_complete_filtered.fastq.gz.bigWig")
+score(DAC_9me3)<- score(DAC_9me3)/(sum(score(DAC_9me3))/1000000)
+export.bw(DAC_9me3,"/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150352_DAC_H3K9me3_CGATGT_L002_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DACSB_9me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150360_DACSB_H3K9me3_ACTTGA_L002_R1_complete_filtered.fastq.gz.bigWig")
+score(DACSB_9me3)<- score(DACSB_9me3)/(sum(score(DACSB_9me3))/1000000)
+export.bw(DACSB_9me3, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150360_DACSB_H3K9me3_ACTTGA_L002_R1_complete_filtered.fastq.gz.normalized.bigWig")
 
 #H3K4me3
-DMSO_4me3 <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150366_DMSO_H3K4me3_ATCACG_L001_R1_complete_filtered.fastq.gz.bigWig")
-SB_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150382_SB939_H3K4me3_ACTTGA_L001_R1_complete_filtered.fastq.gz.bigWig")
-DAC_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150350_DAC_H3K4me3_GCCAAT_L001_R1_complete_filtered.fastq.gz.bigWig")
-DACSB_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150358_DACSB_H3K4me3_CTTGTA_L001_R1_complete_filtered.fastq.gz.bigWig")
+DMSO_4me3 <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150366_DMSO_H3K4me3_ATCACG_L001_R1_complete_filtered.fastq.gz.bigWig")
+score(DMSO_4me3)<- score(DMSO_4me3)/(sum(score(DMSO_4me3))/1000000)
+export.bw(DMSO_4me3, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150366_DMSO_H3K4me3_ATCACG_L001_R1_complete_filtered.fastq.gz.normalized.bigWig")
+SB_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150382_SB939_H3K4me3_ACTTGA_L001_R1_complete_filtered.fastq.gz.bigWig")
+score(SB_4me3)<- score(SB_4me3)/(sum(score(SB_4me3))/1000000)
+export.bw(SB_4me3, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150382_SB939_H3K4me3_ACTTGA_L001_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DAC_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150350_DAC_H3K4me3_GCCAAT_L001_R1_complete_filtered.fastq.gz.bigWig")
+score(DAC_4me3)<- score(DAC_4me3)/(sum(score(DAC_4me3))/1000000)
+export.bw(DAC_4me3, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150350_DAC_H3K4me3_GCCAAT_L001_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DACSB_4me3 <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150358_DACSB_H3K4me3_CTTGTA_L001_R1_complete_filtered.fastq.gz.bigWig")
+score(DACSB_4me3)<- score(DACSB_4me3)/(sum(score(DACSB_4me3))/1000000)
+export.bw(DACSB_4me3, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150358_DACSB_H3K4me3_CTTGTA_L001_R1_complete_filtered.fastq.gz.normalized.bigWig")
 
 #H3K9ac
-DMSO_9ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150367_DMSO_H3K9ac_CGATGT_L005_R1_complete_filtered.fastq.gz.bigWig")
-SB_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150383_SB939_H3K9ac_TGACCA_L005_R1_complete_filtered.fastq.gz.bigWig")
-DAC_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150351_DAC_H3K9ac_TTAGGC_L005_R1_complete_filtered.fastq.gz.bigWig")
-DACSB_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150359_DACSB_H3K9ac_GATCAG_L005_R1_complete_filtered.fastq.gz.bigWig")
+DMSO_9ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150367_DMSO_H3K9ac_CGATGT_L005_R1_complete_filtered.fastq.gz.bigWig")
+score(DMSO_9ac)<- score(DMSO_9ac)/(sum(score(DMSO_9ac))/1000000)
+export.bw(DMSO_9ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150367_DMSO_H3K9ac_CGATGT_L005_R1_complete_filtered.fastq.gz.normalized.bigWig")
+SB_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150383_SB939_H3K9ac_TGACCA_L005_R1_complete_filtered.fastq.gz.bigWig")
+score(SB_9ac)<- score(SB_9ac)/(sum(score(SB_9ac))/1000000)
+export.bw(SB_9ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150383_SB939_H3K9ac_TGACCA_L005_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DAC_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150351_DAC_H3K9ac_TTAGGC_L005_R1_complete_filtered.fastq.gz.bigWig")
+score(DAC_9ac)<- score(DAC_9ac)/(sum(score(DAC_9ac))/1000000)
+export.bw(DAC_9ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150351_DAC_H3K9ac_TTAGGC_L005_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DACSB_9ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150359_DACSB_H3K9ac_GATCAG_L005_R1_complete_filtered.fastq.gz.bigWig")
+score(DACSB_9ac)<- score(DACSB_9ac)/(sum(score(DACSB_9ac))/1000000)
+export.bw(DACSB_9ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150359_DACSB_H3K9ac_GATCAG_L005_R1_complete_filtered.fastq.gz.normalized.bigWig")
 
 #H3K27ac
-DMSO_27ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150362_DMSO_H3K27ac_ATCACG_L008_R1_complete_filtered.fastq.gz.bigWig")
-SB_27ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150378_SB939_H3K27ac_ACTTGA_L008_R1_complete_filtered.fastq.gz.bigWig")
-DAC_27ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150346_DAC_H3K27ac_GCCAAT_L008_R1_complete_filtered.fastq.gz.bigWig")
-DACSB_27ac <-import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/GSM2150354_DACSB_H3K27ac_CTTGTA_L008_R1_complete_filtered.fastq.gz.bigWig")
+DMSO_27ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150362_DMSO_H3K27ac_ATCACG_L008_R1_complete_filtered.fastq.gz.bigWig")
+score(DMSO_27ac)<- score(DMSO_27ac)/(sum(score(DMSO_27ac))/1000000)
+export.bw(DMSO_27ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150362_DMSO_H3K27ac_ATCACG_L008_R1_complete_filtered.fastq.gz.normalized.bigWig")
+SB_27ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150378_SB939_H3K27ac_ACTTGA_L008_R1_complete_filtered.fastq.gz.bigWig")
+score(SB_27ac)<- score(SB_27ac)/(sum(score(SB_27ac))/1000000)
+export.bw(SB_27ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150378_SB939_H3K27ac_ACTTGA_L008_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DAC_27ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150346_DAC_H3K27ac_GCCAAT_L008_R1_complete_filtered.fastq.gz.bigWig")
+score(DAC_27ac)<- score(DAC_27ac)/(sum(score(DAC_27ac))/1000000)
+export.bw(DAC_27ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150346_DAC_H3K27ac_GCCAAT_L008_R1_complete_filtered.fastq.gz.normalized.bigWig")
+DACSB_27ac <- import.bw("/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150354_DACSB_H3K27ac_CTTGTA_L008_R1_complete_filtered.fastq.gz.bigWig")
+score(DACSB_27ac)<- score(DACSB_27ac)/(sum(score(DACSB_27ac))/1000000)
+export.bw(DACSB_27ac, "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/GSM2150354_DACSB_H3K27ac_CTTGTA_L008_R1_complete_filtered.fastq.gz.normalized.bigWig")
 
 #H3K14ac
-chip.dir <- "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/"
+chip.dir <- "/omics/groups/OE0219/internal/tinat/raw_data_repo/ChIP/online/"
 DMSO_14ac <- import.bw(file.path(chip.dir, paste0("GSM2597665_DMSO-7.normalized", ".bigWig")))
 SB_14ac <- import.bw(file.path(chip.dir, paste0("GSM2597647_SB-7.normalized", ".bigWig")))
 DAC_14ac <- import.bw(file.path(chip.dir, paste0("GSM2597638_DAC-7.normalized", ".bigWig")))
@@ -127,6 +168,7 @@ score(DACSB_meth)<- DACSB_meth$Smoothed_Methylation_Level_H2_DAC_plus_SB939
 #parameters
 #create directory
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots")
+dir.create(file.path("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots","normalized"))
 #region
 ext <- 5000 
 fontSize <- 10
@@ -154,8 +196,8 @@ names(peptides_new_ORF_noDMSO_split)<- c("1/3 DAC + SB939 unique", "2/3 DAC + SB
 roi <- anno_transcript[anno_transcript$transcript_id %in%  peptides_new_ORF_noDMSO_split$"3/3 DAC + SB939 unique"$transcript_id,]
 
 roi_new <- roi
-#plot regions
 
+#plot regions
 for (i in 1:length(roi_new)){
     #Define Region
     lim <- c(start(roi_new[i,]), end(roi_new[i,]))
@@ -366,11 +408,11 @@ for (i in 1:length(roi_new)){
         type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC", fill.histogram=col["DAC"],col.histogram=col["DAC"])
     DACSB_5ac_track <- DataTrack(range = DACSB_5ac, genome = "hg19",
         fontsize=fontSize,fontcolor.title="black",col.axis="black",ylim=ylim_5ac, yTicksAt=yTicksAt_5ac,
-        type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC+SB", fill.histogram=col["DACandSB939"],col.histogram=col["DACandSB939"
+        type = c("histogram"), chromosome = Chr, name = "H2BK5ac\nDAC+SB", fill.histogram=col["DACandSB939"],col.histogram=col["DACandSB939"])
      
     #Plot track
-    pdf(file.path("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots",paste0(roi_new[i,]$transcript_id, "_locus_","ext_",ext, "_v1.pdf")), width = 12, height = 24)
-    plotTracks(list(itrack ,getrack,grtrack, anno_repeats, # grtrack_original,
+    pdf(file.path("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots","normalized",paste0(roi_new[i,]$transcript_id, "_locus_","ext_",ext, "_v1.pdf")), width = 12, height = 24)
+  plotTracks(list(itrack ,getrack,grtrack, anno_repeats, # grtrack_original,
         DMSO_rnaseq_track,SB_rnaseq_track,DAC_rnaseq_track,DACSB_rnaseq_track,
         DMSO_cage_track,SB_cage_track,DAC_cage_track,DACSB_cage_track,
         DMSO_meth_track,SB_meth_track,DAC_meth_track,DACSB_meth_track,

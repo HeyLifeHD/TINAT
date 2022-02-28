@@ -655,3 +655,138 @@ g <-cowplot::plot_grid(g_results_repFamily_hg19+coord_flip()+rremove("legend")+r
         rel_widths=c(length(idx_results_repFamily_hg19)+4, length(idx_results_repClass_hg19), length(idx_results_repName_LTR_hg19)))
 
 ggsave(plot=g,file.path(PostDE.dir,"LOLA", "repeats_combined_DEG_up_onlyNovel.pdf"),height = 5, width = 10, useDingbats = FALSE)
+
+
+
+
+#same for only dac sb genes strat
+#same for only novel genes
+#get class code information of de novo assembly, joint with number of exons
+#rename class codes
+anno_classi$class_code_simple  <- NA
+anno_classi$class_code_simple <- ifelse(anno_classi$class_code == "=", "known", NA)
+anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("s", "x", "i", "y", "p", "u"), "non-chimeric (novel)", anno_classi$class_code_simple)
+anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("c", "k", "m", "n", "j", "e", "o"), "chimeric (novel)", anno_classi$class_code_simple)
+anno_classi$transcript_id <- anno_classi$qry_id 
+#combined plot
+anno_transcript <- anno[anno$type == "transcript",]
+userUnisverse <- resize(anno_transcript,1)
+#get degs
+DEG_results_list_sub <- lapply( DEG_results_list[c( "DACandSB939_vs_DMSO")], function(x){
+        x <- dplyr::left_join(x, anno_classi, by="transcript_id")
+})
+DEG_split <-split(DEG_results_list_sub[[c( "DACandSB939_vs_DMSO")]], DEG_results_list_sub[[c( "DACandSB939_vs_DMSO")]]$class_code_simple)
+UserSet <- lapply(DEG_split, function(x){
+        resize(anno_transcript[anno_transcript$transcript_id %in% x[which(x$padj < alpha & x$log2FoldChange>lfc),]$transcript_id,],1)
+})
+#run enrichment analysis
+results_repFamily_hg19= runLOLA(UserSet, userUnisverse, regionDB_repFamily_hg19, cores=4)
+results_repClass_hg19= runLOLA(UserSet, userUnisverse, regionDB_repClass_hg19, cores=4)
+results_repName_LTR_hg19= runLOLA(UserSet, userUnisverse, regionDB_repName_LTR_hg19, cores=4)
+
+#prepare plotting
+#results_repFamily_hg19
+results <- results_repFamily_hg19
+#idx_results_repFamily_hg19<- unique(results[results$qValue < 0.05, ]$filename)
+idx_results_repFamily_hg19<-head(unique(results$filename),1)
+head(unique(results$filename),20)
+results_sub <- results[results$filename %in% idx_results_repFamily_hg19,]
+#data preparation
+combined_data <- results_sub[,c("userSet","dbSet", "pValueLog", "oddsRatio", "cellType" ,"filename")]#[userSet=="closed",]
+combined_data$significant<- ifelse(combined_data$pValueLog< -log10(0.05), "No", "Yes" )
+combined_data$cellType<- c(rep("AM", nrow(combined_data)))
+#change infinite values
+combined_data$pValueLog[is.infinite(combined_data$pValueLog)] <- 500
+combined_data$filename<-sapply(strsplit(combined_data$filename,".",fixed=TRUE),`[`, 1)
+combined_data$userSet <-factor(combined_data$userSet, levels = c( "known" , "non-chimeric (novel)", "chimeric (novel)"))
+#prepare plotting
+g_results_repFamily_hg19 <- ggplot(data = combined_data, aes(y=filename, x=userSet))+coord_fixed()+
+geom_point(aes(size=pValueLog, fill=oddsRatio, color=significant), pch=21)+
+#scale_fill_gradient2( midpoint = 1, low="#273871", high="#6D0026", name = "Odds Ratio")+
+scale_fill_gradientn(colours=rev(hcl.colors(20,"Reds")), name = "Odds Ratio")+scale_colour_manual(values=c(No="grey",Yes= "black"), name="Significant", drop=FALSE)+
+scale_size(name="P-value\n(-log10)", labels = label_func) +
+scale_y_discrete(limits=rev(levels(as.factor(combined_data$filename))))+
+theme(text =element_text(size=14, color="black", family = "sans"),
+        axis.ticks = element_blank(), axis.line = element_blank(), 
+        axis.text.x=element_text(size=18, angle = 90, vjust = 0, color="black", family="sans"),
+        axis.text.y=element_text(size=18, family="sans", color="black"))+
+scale_x_discrete(name=NULL)+
+theme(legend.text=element_text(size=18, family="sans"), 
+        legend.title=element_text(size=18, family= "sans"),
+        legend.background = element_rect(fill="white", color="white"),
+        panel.background =  element_rect(fill="white"), panel.grid.major = element_line(color="lightgrey"),
+        legend.key = element_rect(fill="white"))+rremove("ylab")
+
+#results_repClass_hg19
+results <- results_repClass_hg19
+#idx_results_repClass_hg19 <- unique(results[results$qValue < 0.05, ]$filename)
+idx_results_repClass_hg19 <-head(unique(results$filename),1)
+results_sub <- results[results$filename %in% idx_results_repClass_hg19,]
+#data preparation
+combined_data <- results_sub[,c("userSet","dbSet", "pValueLog", "oddsRatio", "cellType" ,"filename")]#[userSet=="closed",]
+combined_data$significant<- ifelse(combined_data$pValueLog< -log10(0.05), "No", "Yes" )
+combined_data$cellType<- c(rep("AM", nrow(combined_data)))
+#change infinite values
+combined_data$pValueLog[is.infinite(combined_data$pValueLog)] <- 500
+combined_data$filename<-sapply(strsplit(combined_data$filename,".",fixed=TRUE),`[`, 1)
+combined_data$userSet <-factor(combined_data$userSet, levels = c( "known" , "non-chimeric (novel)", "chimeric (novel)"))
+#prepare plotting
+g_results_repClass_hg19 <- ggplot(data = combined_data, aes(y=filename, x=userSet))+coord_fixed()+
+geom_point(aes(size=pValueLog, fill=oddsRatio, color=significant), pch=21)+
+#scale_fill_gradient2( midpoint = 1, low="#273871", high="#6D0026", name = "Odds Ratio")+
+scale_fill_gradientn(colours=rev(hcl.colors(20,"Reds")), name = "Odds Ratio")+scale_colour_manual(values=c(No="grey",Yes= "black"), name="Significant", drop=FALSE)+
+scale_size(name="P-value\n(-log10)", labels = label_func) +
+scale_y_discrete(limits=rev(levels(as.factor(combined_data$filename))))+
+theme(text =element_text(size=14, color="black", family = "sans"),
+        axis.ticks = element_blank(), axis.line = element_blank(), 
+        axis.text.x=element_text(size=18, angle = 90, vjust = 0, color="black", family="sans"),
+        axis.text.y=element_text(size=18, family="sans", color="black"))+
+scale_x_discrete(name=NULL)+
+theme(legend.text=element_text(size=18, family="sans"), 
+        legend.title=element_text(size=18, family= "sans"),
+        legend.background = element_rect(fill="white", color="white"),
+        panel.background =  element_rect(fill="white"), panel.grid.major = element_line(color="lightgrey"),
+        legend.key = element_rect(fill="white"))+rremove("ylab")
+
+
+#results_repName_LTR_hg19
+results <- results_repName_LTR_hg19
+#idx_results_repName_LTR_hg19 <- unique(results[results$qValue < 0.05, ]$filename)
+#idx_results_repName_LTR_hg19 <-head(unique(results$filename),5)
+idx_results_repName_LTR_hg19 <-unique(results$filename[grep("LTR12",results$filename)])
+
+results_sub <- results[results$filename %in% idx_results_repName_LTR_hg19,]
+#data preparation
+combined_data <- results_sub[,c("userSet","dbSet", "pValueLog", "oddsRatio", "cellType" ,"filename")]#[userSet=="closed",]
+combined_data$significant<- ifelse(combined_data$pValueLog< -log10(0.05), "No", "Yes" )
+combined_data$cellType<- c(rep("AM", nrow(combined_data)))
+#change infinite values
+combined_data$pValueLog[is.infinite(combined_data$pValueLog)] <- 500
+combined_data$filename<-sapply(strsplit(combined_data$filename,".",fixed=TRUE),`[`, 1)
+combined_data$userSet <-factor(combined_data$userSet, levels = c( "known" , "non-chimeric (novel)", "chimeric (novel)"))
+#prepare plotting
+g_results_repName_LTR_hg19 <- ggplot(data = combined_data, aes(y=filename, x=userSet))+coord_fixed()+
+geom_point(aes(size=pValueLog, fill=oddsRatio, color=significant), pch=21)+
+#scale_fill_gradient2( midpoint = 1, low="#273871", high="#6D0026", name = "Odds Ratio")+
+scale_fill_gradientn(colours=rev(hcl.colors(20,"Reds")), name = "Odds Ratio")+
+scale_colour_manual(values=c(No="grey",Yes= "black"), name="Significant", drop=FALSE)+
+scale_size(name="P-value\n(-log10)", labels = label_func) +
+scale_y_discrete(limits=rev(levels(as.factor(combined_data$filename))))+
+theme(text =element_text(size=14, color="black", family = "sans"),
+        axis.ticks = element_blank(), axis.line = element_blank(), 
+        axis.text.x=element_text(size=18, angle = 90, vjust = 0, color="black", family="sans"),
+        axis.text.y=element_text(size=18, family="sans", color="black"))+
+scale_x_discrete(name=NULL)+
+theme(legend.text=element_text(size=18, family="sans"), 
+        legend.title=element_text(size=18, family= "sans"),
+        legend.background = element_rect(fill="white", color="white"),
+        panel.background =  element_rect(fill="white"), panel.grid.major = element_line(color="lightgrey"),
+        legend.key = element_rect(fill="white"))+rremove("ylab")
+
+g <-cowplot::plot_grid(g_results_repFamily_hg19+coord_flip()+rremove("legend")+rremove("xlab"),
+        g_results_repClass_hg19+coord_flip()+rremove("y.text")+rremove("legend")+rremove("xlab"),
+        g_results_repName_LTR_hg19+coord_flip()+rremove("y.text")+rremove("xlab"),
+        ncol=3,align = c("h"),#labels=c("Family", "Class", "Name"),
+        rel_widths=c(length(idx_results_repFamily_hg19)+4, length(idx_results_repClass_hg19), length(idx_results_repName_LTR_hg19)))
+
+ggsave(plot=g,file.path(PostDE.dir,"LOLA", "repeats_combined_DEG_up_ClassCodeStrat.pdf"),height = 5, width = 10, useDingbats = FALSE)
