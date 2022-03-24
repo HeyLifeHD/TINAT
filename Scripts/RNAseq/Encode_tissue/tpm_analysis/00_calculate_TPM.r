@@ -63,8 +63,9 @@ exons_length <- lapply(anno_exons_split, function(x){
 })
 exons_length <- unlist(exons_length)
 saveRDS(exons_length, file.path("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4", "exon_length.rds"))
+exons_length <- readRDS(file.path("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4", "exon_length.rds"))
 #calculate tpms
-tpm <- counts_to_tpm(counts=counts_raw, featureLength=exons_length[rownames(counts_raw)], meanFragmentLength=rep(1, ncol(counts)))
+tpm <- counts_to_tpm(counts=counts_raw, featureLength=exons_length[rownames(counts_raw)], meanFragmentLength=rep(1, ncol(counts_raw)))
 saveRDS(tpm, file.path(results.dir, "tpm_from_counts.rds"))
 
 #summarize over mean tissue

@@ -44,4 +44,9 @@ gffread -w /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNov
 #final: top strand and 8 aa
 cd tools/TransDecoder/
 ./TransDecoder.LongOrfs -t  /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta \
-> -m 8 -S -O /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa
+> -m 8 -S -O /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa_test
+
+
+mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa_test
+cd /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa_test
+/home/heyj/tools/TransDecoder/TransDecoder.LongOrfs -t /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.fasta -m 8 -S -O /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa_test/

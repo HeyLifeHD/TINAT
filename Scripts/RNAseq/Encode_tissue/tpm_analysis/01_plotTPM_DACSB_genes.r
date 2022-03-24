@@ -36,7 +36,7 @@ vst_h1299 <- readRDS(file.path(results_h1299.dir, "vst.rds"))
 dds_h1299 <-readRDS(file.path(results_h1299.dir, "dds.rds"))
 DEG_results_list_h1299<- readRDS(file.path(PostDE_h1299.dir, "DEG_results_group_list.rds"))
 anno <- readRDS("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted_repeat_anno.rds")
-anno_original <-  readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.repeat_anno.rds")
+anno_original <-  readRDS("/omics/groups/OE0219/cinternal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.repeat_anno.rds")
 anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.mergedTranscripts.gtf.tmap"))
 tpm_mean_h1299 <- readRDS(file.path(results_h1299.dir, "tpm_meanTreatment_from_counts.rds"))
 
@@ -45,6 +45,18 @@ alpha <- 0.01 #set FDR cutoff
 cutoff <- alpha
 lfc <- 2##set logfold2 cutoff
 l2fc <- lfc
+
+#get color code
+library(RColorBrewer)
+col <- brewer.pal(12, "Paired")
+treat_col <- col[c(4,2,8,6)]
+names(treat_col)<-c("DMSO", "DAC", "SB939",  "DACandSB939")
+class_col <- c("gray", col[c(9,10)])
+names(class_col)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
+ere_col <- col[c(1,12,5,7,3)]
+names(ere_col)<-  c("LINE", "LTR", "no ERE", "other", "SINE")
+exon_col <- c("darkgray", "whitesmoke")
+names(exon_col)<- c("multi-exonic", "mono-exonic")
 
 #plotting parameters
 #sample level
@@ -148,8 +160,8 @@ saveRDS(tpm_mean_combined, file.path(results.dir, "tpm_mean_combined_from_counts
 data.table::fwrite(tpm_mean_combined, file.path(results.dir, "tpm_mean_combined_from_counts.txt"), row.names=TRUE)
 #combine annotation
 col <- randomcoloR::distinctColorPalette(length(unique(colData(dds)$tissue)))
-col <- c(col, c("#00AFBB", "#E7B800", "#FC4E07","gray"))
-names(col) <- c(levels(colData(dds)$tissue), levels(colData(dds_h1299)$treatment))
+col <- c(col, treat_col)
+names(col) <- c(levels(colData(dds)$tissue), names(treat_col))
 anno_colors <- list(tissue=col)
 annovst_tissue <- data.frame(row.names= c(levels(anno$tissue),levels(colData(dds_h1299)$treatment)), 
 tissue= c(levels(anno$tissue),levels(colData(dds_h1299)$treatment)))
@@ -189,6 +201,59 @@ pdf(file.path(PreDE.dir,"TPM_meanCombined_Heatmap_novel_up_DACSB_absolute_rowSca
 pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst),
                        annotation_col=as.data.frame(annovst_tissue), show_rownames=T,annotation_colors=anno_colors, fontsize_row=5)
 dev.off()
+
+
+#as boxplot
+matvst <- tpm_mean_combined[genes2plot_novel$DACandSB939_vs_DMSO,]
+mat_plot <- matvst
+mat_plot <- reshape2::melt(mat_plot)
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot_novel_up_DACSB_absolute_withoutOutliers.pdf"),height= 10)
+ggboxplot(mat_plot, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of novel, differentially induced transcripts", fill="variable", palette=anno_colors$tissue, outlier.shape=NA)+
+    rremove("ylab")+ylim(c(0,20))+rremove("legend")
+dev.off()
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot_novel_up_DACSB_absolute.pdf"),height= 10)
+ggboxplot(mat_plot, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of novel,differentially induced transcripts", fill="variable", palette=anno_colors$tissue)+
+    rremove("ylab")+rremove("legend")
+dev.off()
+
+#combine with housekeeping list
+hkt <- data.table::fread(file.path(results.dir,"MostStable.csv" ))
+#get our transcript anno
+anno_classi_known <- anno_classi[anno_classi$class_code =="=", ]
+hkt_own <- anno_classi_known$transcript_id[sapply(strsplit(as.character(anno_classi_known$ref_id), ".", fixed=TRUE), "[",1) %in% hkt$"Ensembl ID" ]
+length(hkt_own)
+house_keeper <- tpm_mean_combined[ hkt_own,]
+house_keeper <- reshape2::melt(house_keeper)
+mat_plot$class <- "novel, upregulated, and LTR12-derived DEGs"
+house_keeper$class <- "housekeping transcripts"
+ plot <- rbind(mat_plot, house_keeper)
+
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot_novel_up_DACSB_absolute_withoutOutliers_withHKT.pdf"),height= 10)
+ggboxplot(plot, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of novel, upregulated, and LTR12-derived DEGs", fill="class", outlier.shape=NA)+
+    rremove("ylab")+ylim(c(0,20))+rremove("legend")
+dev.off()
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot_novel_up_DACSB_absolute_withHKT.pdf"),height= 10)
+ggboxplot(plot, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of novel, differentially induced", fill="class")+
+    rremove("ylab")+rremove("legend")
+dev.off()
+
+#only house keeping
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot__novel_up_DACSB_absolute_withoutOutliers_onlyHKT.pdf"),height= 10)
+ggboxplot(house_keeper, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of housekeeper transcripts", fill="variable", outlier.shape=NA, palette=anno_colors$tissue)+
+    rremove("ylab")+ylim(c(0,20))+rremove("legend")
+dev.off()
+pdf(file.path(PreDE.dir,"TPM_meanCombined_boxplot_novel_up_DACSB_absolute_onlyHKT.pdf"),height= 10)
+ggboxplot(house_keeper, x="variable", y="value",  order=rev(colnames(matvst[,order(colMedians(as.matrix(matvst)), decreasing=TRUE)])), 
+    rotate=TRUE, ylab="TPM of housekeeper transcripts", fill="variable", palette=anno_colors$tissue)+
+    rremove("ylab")+rremove("legend")
+dev.off()
+
+
 
 
 #genes upregulated, novel and ltr12 derived

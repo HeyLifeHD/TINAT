@@ -50,6 +50,8 @@ design(dds)
 alpha <- 0.01 #set FDR cutoff
 lfc <- 2##set logfold2 cutoff
 
+temp <- DEG_results_list[["DACandSB939_vs_DMSO"]][which(DEG_results_list[["DACandSB939_vs_DMSO"]]$padj < alpha & DEG_results_list[["DACandSB939_vs_DMSO"]]$log2FoldChange>lfc),]
+
 #load database
 regionDB_repFamily_hg19 <- loadRegionDB(file.path(datasets.dir,"repFamily_hg19"))
 regionDB_repClass_hg19 <- loadRegionDB(file.path(datasets.dir,"repClass_hg19"))

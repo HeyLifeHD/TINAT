@@ -26,7 +26,9 @@ anno <- readRDS("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing
 anno_original <-  readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.repeat_anno.rds")
 anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.mergedTranscripts.gtf.tmap"))
 tpm_mean_h1299 <- readRDS(file.path(results.dir, "tpm_meanTreatment_from_counts.rds"))
-
+#temp <-as.data.frame(tpm_mean_h1299)
+#temp$transcript_id <- rownames(temp)
+#write.table(temp, file.path(results.dir, "tpm_meanTreatment_from_counts.txt"), row.names=FALSE,col.names=TRUE, sep="\t")
 #Set specifications
 alpha <- 0.01 #set FDR cutoff
 cutoff <- alpha

@@ -47,7 +47,7 @@ names(peptide_sub)  <- gsub("ORF_ORF_", "ORF_", names(peptide_sub))
 names(peptide_sub)  <- gsub("_tinat_tinat", "_tinat", names(peptide_sub))
 
 writeXStringSet(peptide_sub, "/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_forJens_novel.fa")
-
+peptide_sub <-  readAAStringSet("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_forJens_novel.fa")
 
 ##select ORFs baased on upregulation in DEG analysis
 DEG_results_list<- readRDS("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/results/PostDE/DEG_results_group_list.rds")
@@ -85,3 +85,21 @@ length(peptide)
 writeXStringSet(pepteide_sub_induced, "/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACandSB939vsDMSO_novelTranscript_forJens_novel.fa")
 
 
+#subset orfs that give rise to final candidates
+peptides_new <- readRDS(file.path( "/omics/groups/OE0219/internal/tinat/integration/peptidomics/comparison_gene_expression", "peptides_list_new.rds"))
+#subset peptides that originatee from our orf list
+peptides_new_ORF <- peptides_new[peptides_new$Species =="ORFs",]
+peptides_new_ORF_oi <- peptides_new_ORF[peptides_new_ORF$DAC_SB>60 & peptides_new_ORF$DMSO ==0,]
+
+#subset peptide list
+temp <- sapply(strsplit(names(peptide_sub), " type",fixed=TRUE), "[",1) 
+pepteide_sub_candidates <- peptide_sub[temp %in% peptides_new_ORF_oi$accession_new,]
+nrow(peptides_new_ORF_oi) == length(pepteide_sub_candidates)
+length(pepteide_sub_candidates)
+length(peptide_sub)
+writeXStringSet(pepteide_sub_candidates, "/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_candidate_transcript_forJens_novel.fa")
+#all novel ORFs
+pepteide_sub_novelORFs <- peptide_sub[temp %in% peptides_new_ORF$accession_new,]
+length(pepteide_sub_novelORFs)
+length(peptide_sub)
+writeXStringSet(pepteide_sub_novelORFs, "/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_novelORFs_identified_transcript_forJens_novel.fa")
