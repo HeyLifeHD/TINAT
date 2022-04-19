@@ -31,3 +31,9 @@ induced_h1299 <- dplyr::left_join(induced_h1299, anno_transcript, by="transcript
 write.table(induced_h1299, file.path(PostDE_setb1.dir,"DACSB_DEGs_induced_in_SETB1.txt"), row.names=FALSE, col.names=TRUE,sep="\t" )
 
 table(rownames(induced_setb1) %in% rownames(induced_h1299))
+
+
+pdf(file.path(PostDE_setb1.dir, "Venn_DEG_up_DACSB.pdf"))
+ggVennDiagram::ggVennDiagram(list(SETB1_induced=rownames(induced_setb1), DACSB_induced=rownames(induced_h1299) ), label_alpha = 0)
+    #scale_fill_gradient(low="white",high = "#EF8A62")
+dev.off()

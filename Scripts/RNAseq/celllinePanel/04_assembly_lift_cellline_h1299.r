@@ -66,6 +66,10 @@ dim(lift_exact)
 nrow(peptides_new_ORF_oi[which(peptides_new_ORF_oi$transcript_id %in% lift_exact$H1299_anno),])
 nrow(peptides_new_ORF_oi)
 
+length(unique(peptides_new_ORF_oi[which(peptides_new_ORF_oi$transcript_id %in% lift_exact$H1299_anno),]$sequences))
+length(unique(peptides_new_ORF_oi$sequences))
+
+unique(peptides_new_ORF_oi[!peptides_new_ORF_oi$transcript_id %in% lift_exact$H1299_anno,]$transcript_id)
 
 # table(transcripts %in% lift$Cellline_anno)
 # str(lift)

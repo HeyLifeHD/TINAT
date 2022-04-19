@@ -14,10 +14,10 @@ exon_col <- c("darkgray", "whitesmoke")
 names(exon_col)<- c("multi-exonic", "mono-exonic")
 
 #load peptides of interest
-pepteide_sub_induced <- readAAStringSet( "/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACandSB939vsDMSO_forJens_novel.fa")
+pepteide_sub_induced <- readAAStringSet( "/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACSBvsDMSO_forJens_novel.fa")
 
 #load transcript classification
-anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.mergedTranscripts.gtf.tmap"))
+anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/gffCompare.mergedTranscripts.gtf.tmap"))
 #rename class codes
 anno_classi$class_code_simple  <- NA
 anno_classi$class_code_simple <- ifelse(anno_classi$class_code == "=", "known", NA)
@@ -46,26 +46,14 @@ lapply(orf_list_splitClass_stat, function(x)mean(x$Freq))
 lapply(orf_list_splitClass_stat, function(x)sum(x$Freq))
 
 #plot 
-pdf(file.path("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/", "ORFs_per_transcripts_inducedDACSB.pdf"),
+pdf(file.path("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/transdecoder_default_topStrand_8aa/", "ORFs_per_transcripts_inducedDACSB.pdf"),
     height=4, width=8)
 gghistogram(orf_list_splitClass_stat_unlist, "Freq", 
     fill="class_code_simple" ,palette=class_col,add="mean", xlab="Number of ORFs per transcript",ylab="Frequency",
     combine=FALSE, bins=50, facet.by="class_code_simple", rug=TRUE)+rremove("legend")
 dev.off()
 
-pdf(file.path("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/", "ORFs_per_transcripts_inducedDACSB_comb.pdf"),
-    height=4, width=4)
-gghistogram(orf_list_splitClass_stat_unlist, "Freq", 
-    color="class_code_simple" ,palette=class_col,add="mean", xlab="Number of ORFs per transcript",ylab="Frequency",
-    bins=50, rug=TRUE)+rremove("legend")
-dev.off()
 
-pdf(file.path("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/", "ORFs_per_transcripts_inducedDACSB_comb_noCol.pdf"),
-    height=4, width=4)
-gghistogram(orf_list_splitClass_stat_unlist, "Freq", 
-    add="mean", xlab="Number of ORFs per transcript",ylab="Frequency",
-    combine=FALSE, bins=50, rug=TRUE)+rremove("legend")
-dev.off()
 # ##plot as histograms
 # histo_known <- gghistogram(orf_list_splitClass_stat[["known"]], "Freq", fill=class_col["known"], xlim=c(0,710), bins=10)
 # histo_chimeric <- gghistogram(orf_list_splitClass_stat[["chimeric (novel)"]], "Freq", fill=class_col["chimeric (novel)"], xlim=c(0,710), bins=2)

@@ -22,7 +22,7 @@ library(ggpubr)
 library(LOLA)
 library(GenomicFeatures)
 library(UpSetR)
-
+library(ggrastr)
 set.seed(42)
 
 #Directories
@@ -112,7 +112,10 @@ for (i in c( "DAC_vs_DMSO","SB939_vs_DMSO","DACandSB939_vs_DMSO")){
     geom_hline(yintercept=-log10(alpha), linetype = 2)+
     xlab("Transcript expression change\n(log2 fold change)") + ylab("- log10(adj. P value)")
   
-  ggsave(plot=Volcanos[[i]],file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.pdf"),height = 5, width = 5, useDingbats = FALSE)
+  #ggsave(plot=Volcanos[[i]],file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.pdf"),height = 5, width = 5, useDingbats = FALSE)
+  pdf(file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.pdf"),height = 5, width = 5)
+  print(rasterize(Volcanos[[i]], layers="Point", dpi=500))
+  dev.off()
   ggsave(plot=Volcanos[[i]],file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.png"),height = 5, width = 5, device="png")
   print(i)
 }

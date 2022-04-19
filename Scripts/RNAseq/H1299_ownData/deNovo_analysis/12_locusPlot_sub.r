@@ -4,6 +4,8 @@ library(GenomicFeatures)
 library(rtracklayer)
 library(data.table)
 library(Gviz)
+library(BSgenome.Hsapiens.UCSC.hg19)
+
 #load data
 #annotations
 #anno_original_gtf <- makeTxDbFromGFF("/omics/groups/OE0219/internal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.gtf")
@@ -104,6 +106,7 @@ dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNo
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_withNano")
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_withAlign")
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_withAlign_Peptide")
+dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_Peptide_only")
 #select region
 temp <- "^GAPDH$"
 roi <- anno_original[grep(temp, anno_original$gene_name),]
@@ -125,16 +128,17 @@ peptides_new_ORF_noDMSO <-  peptides_new_ORF[peptides_new_ORF$DAC_SB>60 & peptid
 #names(peptides_new_ORF_noDMSO_split)<- c("1/3 DAC + SB939 unique", "2/3 DAC + SB939 unique", "3/3 DAC + SB939 unique")
 #roi <- anno_transcript[anno_transcript$transcript_id %in%  peptides_new_ORF_noDMSO_split$"3/3 DAC + SB939 unique"$transcript_id,]
 roi <- anno_transcript[anno_transcript$transcript_id %in%  peptides_new_ORF_noDMSO$transcript_id,]
-
 roi_new <- roi[grep("gl", as.character(seqnames(roi)), invert=TRUE),]
+
 #specific selection
-roi_new <- roi_new[roi_new$transcript_id =="MSTRG.16894.1",]
+roi_new <- anno_transcript
+roi_new <- roi_new[roi_new$transcript_id %in% c("MSTRG.16894.3","MSTRG.28868.1", "MSTRG.29191.1"),]
 
-roi_new <- roi[grep("GAPDH", as.character(seqnames(roi)), invert=TRUE),]
-
+#peptide_coord
+roi_new <- peptide_coord_sub[peptide_coord_sub$transcript_id %in% c("MSTRG.16894.3","MSTRG.28868.1", "MSTRG.29191.1"),]
 
 #plot regions
-for (i in 1:length(roi_new)){
+for (i in 2:length(roi_new)){
     tryCatch({
     #Define Region
     lim <- c(start(roi_new[i,]), end(roi_new[i,]))
@@ -271,6 +275,97 @@ for (i in 1:length(roi_new)){
     print(i)
     },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 }
+
+
+
+#only peptide sequence
+ext <- 50
+#peptide_coord
+roi_new <- peptide_coord_sub[peptide_coord_sub$transcript_id %in% c("MSTRG.16894.3","MSTRG.28868.1", "MSTRG.29191.1"),]
+
+#plot regions
+for (i in 1:length(roi_new)){
+    tryCatch({
+    #Define Region
+    lim <- c(start(roi_new[i,]), end(roi_new[i,]))
+    Chr<- as.character(seqnames(roi_new[i,]))
+    range<- GRanges(
+    seqnames = Chr,
+    ranges = IRanges(start = lim[1]-ext,
+                   end = lim[2]+ext))
+
+    #get ideogramm tracks
+    itrack <- IdeogramTrack(genome = "hg19", chromosome =Chr,fontcolor="black")
+
+    #genome axis track
+    getrack <- GenomeAxisTrack(fontcolor="black")
+
+    #sequence track
+    sTrack <- SequenceTrack(BSgenome.Hsapiens.UCSC.hg19, chromosome =Chr, from =lim[1]-ext, to = lim[2]+ext,cex=0.5)
+
+    #deNOvo anno
+    grtrack <- GeneRegionTrack(anno_gtf, chromosome=Chr, transcriptAnnotation="symbol", showId=TRUE, # fill="darkgray",
+        geneSymbol=TRUE, name="deNovo",collapseTrack=TRUE,color="black", cex.feature = 0.75,
+        fontsize=fontSize,fontcolor.title="black", fontcolor.group="black", 
+        Known=class_col["known"], Chimeric=class_col["chimeric (novel)"], NonChimeric=class_col["non-chimeric (novel)"])
+    symbol(grtrack) <- as.character(anno_transcript_symbol[transcript(grtrack),])
+    feature(grtrack) <- anno_transcript_class[transcript(grtrack),]
+
+    #get annotation tracks of LTR12 repeats
+    anno_repeats <- AnnotationTrack(repeats[grep("LTR12", repeats$repName),], name="LTR12", 
+        shape = "box",fill="darkgray",color="darkgray", fontsize=fontSize,fontcolor.title="black",fontcolor.feature ="black",
+        chromosome=Chr,genome = "hg19", fill="darkgray", featureAnnotation="feature", cex.feature = 0.5)
+    feature(anno_repeats)<- repeats[grep("LTR12", repeats$repName),]$repName
+
+     #get annotation tracks of peptides
+    anno_peptides <- AnnotationTrack(reduce(peptide_coord_sub), name="Peptides", 
+        shape = "box",fill="black",color="black", fontcolor.title="black",fontcolor.feature ="black",
+        chromosome=Chr,genome = "hg19", fill="black", cex.feature = 0.5)
+
+
+    #Plot track
+    pdf(file.path("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_Peptide_only",
+    paste0(roi_new[i,]$transcript_id, "_locus_","ext_",ext, "_v1.pdf")), width = 12, height = 3)
+    plotTracks(list(itrack,sTrack, getrack,anno_repeats,anno_peptides,grtrack
+        ),fontcolor.title="black",sizes=c(0.5,0.5,1,0.5,0.75,2),
+        from =lim[1]-ext, to = lim[2]+ext, chromosome=Chr)
+    dev.off()
+    print(i)
+    },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

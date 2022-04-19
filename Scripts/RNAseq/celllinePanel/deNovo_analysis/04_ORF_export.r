@@ -63,7 +63,7 @@ length(pepteide_sub_induced)
 length(peptide_sub)
 
 writeXStringSet(pepteide_sub_induced, "/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACSBvsDMSO_forJens_novel.fa")
-
+pepteide_sub_induced <- readAAStringSet("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACSBvsDMSO_forJens_novel.fa")
 #short test and comparison with lift
 lift <- readRDS("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly//H1299_comparison_annotatedVersion/liftAnno_celllinePanel_h1299.rds")
 table(temp %in% lift$Cellline_anno)
