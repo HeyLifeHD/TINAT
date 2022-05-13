@@ -49,6 +49,9 @@ lift <- data.frame(Cellline_anno=as.character(anno_new_transcript$transcript_id)
 lift$Cellline_anno <- as.character(lift$Cellline_anno)
 lift$H1299_anno <- as.character(lift$H1299_anno)
 saveRDS(lift, "/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly//H1299_comparison_annotatedVersion/liftAnno_celllinePanel_h1299.rds")
+lift <- readRDS("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly//H1299_comparison_annotatedVersion/liftAnno_celllinePanel_h1299.rds")
+write.table(lift,"/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly//H1299_comparison_annotatedVersion/liftAnno_celllinePanel_h1299.tsv",
+    sep="\t", row.names=FALSE, col.names=TRUE )
 
 #see how many peptide candidate transcripts have a perfect match
 #load peptide data

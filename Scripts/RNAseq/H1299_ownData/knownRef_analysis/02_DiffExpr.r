@@ -169,6 +169,7 @@ for (i in names(DEG_results_list_plot)){
   pdf(file.path(PostDE.dir,i,"volcano2.pdf"), height=3.5, width=3.5)
   print(Volcanos[[i]])
   dev.off()
+  ggsave(plot=ggrastr::rasterize(Volcanos[[i]], layers="Point", dpi=500),file.path(PostDE.dir,i,"volcano_v2.pdf"),height = 5, width = 5,  useDingbats=TRUE)
 }
 
 Volcanos<- list() 
@@ -183,7 +184,8 @@ for (i in names(DEG_results_list_plot)){
   pdf(file.path(PostDE.dir,i,"volcano3.pdf"), height=3.5, width=3.5)
   print(Volcanos[[i]])
   dev.off()
-  tgutil::ggrasterize(plot=Volcanos[[i]], filename=file.path(PostDE.dir,i,"volcano4.pdf"))
+  ggsave(plot=ggrastr::rasterize(Volcanos[[i]], layers="Point", dpi=500),file.path(PostDE.dir,i,"volcano_v3.pdf"),height = 5, width = 5,  useDingbats=TRUE)
+  #tgutil::ggrasterize(plot=Volcanos[[i]], filename=file.path(PostDE.dir,i,"volcano4.pdf"))
 }
 
 #MA plot

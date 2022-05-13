@@ -82,7 +82,16 @@ anno_classi$class_code_simple <- ifelse(anno_classi$class_code == "=", "known", 
 anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("s", "x", "i", "y", "p", "u"), "non-chimeric (novel)", anno_classi$class_code_simple)
 anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("c", "k", "m", "n", "j", "e", "o"), "chimeric (novel)", anno_classi$class_code_simple)
 anno_classi$transcript_id <- anno_classi$qry_id
-
+#annotate complete table for export
+DEG_results_list_anno <- lapply(DEG_results_list, function(x){
+    x <- dplyr::left_join(x, anno_classi, by="transcript_id")
+    x
+})
+for(i in names(DEG_results_list_anno)){
+    write.table(DEG_results_list_anno[[i]], file.path(PostDE.dir, i, paste0(i, "_DEG_anno.csv")), sep="; ", col.names=TRUE, row.names=TRUE)
+    print(i)
+}
+#plot
 for( i in names(genes2plot)){
     dir.create(file.path(output.dir,i))
     #subsetgenes of interest

@@ -116,6 +116,9 @@ plot <- ggplot(ORF_stats_combined, aes(x=width, y=order))+
 pdf(file.path(output.dir, "2of3DACSB_unique", "ORF_length_peptidesHighlighted_mean.pdf"), height=5, width=5)
 rasterize(plot, layers="Point", dpi=500)
 dev.off()
+pdf(file.path(output.dir, "2of3DACSB_unique", "ORF_length_peptidesHighlighted_mean_nonRasterize.pdf"), height=5, width=5)
+plot
+dev.off()
 
 library(ggrastr)
 plot <- ggplot(ORF_stats_combined, aes(x=width, y=order))+

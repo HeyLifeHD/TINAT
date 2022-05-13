@@ -118,8 +118,8 @@ for (i in c( "DAC_vs_DMSO","SB939_vs_DMSO","DACSB_vs_DMSO")){
     geom_hline(yintercept=-log10(alpha), linetype = 2)+
     xlab("Transcript expression change\n(log2 fold change)") + ylab("- log10(adj. P value)")
   
-  ggsave(plot=Volcanos[[i]],file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.pdf"),height = 5, width = 5, useDingbats = FALSE)
-  ggsave(plot=Volcanos[[i]],file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.png"),height = 5, width = 5, device="png")
+  ggsave(plot=ggrastr::rasterize(Volcanos[[i]], layers="Point", dpi=500),file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.pdf"),height = 5, width = 5, useDingbats = FALSE)
+  ggsave(plot=ggrastr::rasterize(Volcanos[[i]], layers="Point", dpi=500),file.path(PostDE.dir,i,"volcano_Class_code_simple_CTALabel.png"),height = 5, width = 5, device="png")
   print(i)
 }
 

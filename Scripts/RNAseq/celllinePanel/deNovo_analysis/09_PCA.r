@@ -52,15 +52,17 @@ pc<- as.data.frame(cbind(pc ,anno))
 pc$treatment <- as.character(pc$treatment)
 
 dir.create(file.path(PreDE.dir, "PCA"))
-pdf(file.path(PreDE.dir, "PCA","PCA12_5000mvgenes.pdf"), height = 5, width = 6)
-ggscatter(pc, x="PC1", y="PC2",
+temp <- ggscatter(pc, x="PC1", y="PC2",
             color = "treatment", 
             shape= "cellline",
             ellipse = T,, mean.point = FALSE,palette=treat_col,
             star.plot = F, xlab=(paste0("PC1: ", round(summary(ir.pca)$importance[2,1]*100,2), "% variance")), 
             ylab=(paste0("PC2: ", round(summary(ir.pca)$importance[2,2]*100,2), "% variance")))+
             theme(legend.position="right")
+pdf(file.path(PreDE.dir, "PCA","PCA12_5000mvgenes.pdf"), height = 5, width = 6)
+temp
 dev.off()
+ggsave(plot=ggrastr::rasterize(temp, layers="Point", dpi=500),file.path(PreDE.dir, "PCA","PCA12_5000mvgenes_v2.pdf"),height = 5, width = 6,  useDingbats=TRUE) 
 pdf(file.path(PreDE.dir, "PCA","PCA13_5000mvgenes.pdf"), height = 5, width = 6)
 ggscatter(pc, x="PC1", y="PC3",
             color = "treatment", 
@@ -70,12 +72,15 @@ ggscatter(pc, x="PC1", y="PC3",
             ylab=(paste0("PC3: ", round(summary(ir.pca)$importance[2,3]*100,2), "% variance")))+
             theme(legend.position="right")
 dev.off()
-pdf(file.path(PreDE.dir, "PCA","PCA13_5000mvgenes_withEllipse.pdf"), height = 5, width = 6)
-ggscatter(pc, x="PC1", y="PC3",
+temp <- ggscatter(pc, x="PC1", y="PC3",
             color = "treatment", 
             shape= "cellline",
             ellipse = T,, mean.point = FALSE,palette=treat_col,
             star.plot = F, xlab=(paste0("PC1: ", round(summary(ir.pca)$importance[2,1]*100,2), "% variance")), 
             ylab=(paste0("PC3: ", round(summary(ir.pca)$importance[2,3]*100,2), "% variance")))+
             theme(legend.position="right")
+pdf(file.path(PreDE.dir, "PCA","PCA13_5000mvgenes_withEllipse.pdf"), height = 5, width = 6)
+temp 
 dev.off()
+
+ggsave(plot=ggrastr::rasterize(temp, layers="Point", dpi=500),file.path(PreDE.dir, "PCA","PCA13_5000mvgenes_withEllipse_v2.pdf"),height = 5, width = 6, useDingbats=TRUE) 

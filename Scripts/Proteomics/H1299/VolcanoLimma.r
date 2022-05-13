@@ -80,7 +80,7 @@ anno_classi$transcript_id <- anno_classi$qry_id
 proteomics$transcript_id  <- sapply(strsplit(proteomics$Protein_IDs,"ORF_", fixed=TRUE),"[",2)
 proteomics$transcript_id  <- sapply(strsplit(proteomics$transcript_id,".p", fixed=TRUE),"[",1)
 proteomics <-  dplyr::left_join(proteomics, anno_classi,by="transcript_id")
-
+write.table(proteomics, file.path("/omics/groups/OE0219/internal/tinat/proteomics","proteomics_anno.csv"), sep="; ", col.names=TRUE, row.names=FALSE)
 #define padj cutoff for plotting --> only up
 alpha <- 0.05 #set FDR cutoff
 lfc <- 0##set logfold2 cutoff
