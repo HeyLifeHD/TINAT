@@ -85,7 +85,7 @@ score(DACSB_meth)<- DACSB_meth$Smoothed_Methylation_Level_H2_DAC_plus_SB939
 
 #parameters
 #region
-ext <- 1500 
+ext <- 0 
 fontSize <- 10
 #get color code
 library(RColorBrewer)
@@ -107,6 +107,7 @@ dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNo
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_withAlign")
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_withAlign_Peptide")
 dir.create("/omics/groups/OE0219/internal/tinat/210727_shortRead_processing_deNovo_custom4_quantification_analysis/locus_plots/sub_Peptide_only")
+
 #select region
 temp <- "^GAPDH$"
 roi <- anno_original[grep(temp, anno_original$gene_name),]
@@ -136,6 +137,14 @@ roi_new <- roi_new[roi_new$transcript_id %in% c("MSTRG.16894.3","MSTRG.28868.1",
 
 #peptide_coord
 roi_new <- peptide_coord_sub[peptide_coord_sub$transcript_id %in% c("MSTRG.16894.3","MSTRG.28868.1", "MSTRG.29191.1"),]
+
+#roi based on coordinates 
+roi_new <- GRanges(
+    seqnames = c("chr8", "chr8", "chr16", "chr10", "chr20","chr22","chr22", "chr9", "chr9","chr12", "chr1", "chr8", "chr19" ),
+    ranges = IRanges(start = c(101267295, 101267295,20942433,114128500,55922500,30991718,30991718,91973702, 91973702, 7144000,119713854, 77347011,8443894),
+                   end =c(101350432,101330400, 21172762,114190134,55956258,31039779,31027974,92112571,92116000,7179000,119727577,77361001,8454545)))
+roi_new$transcript_id <- c("RNF19A_1","RNF19A_2", "DNAH3", "ACSL5" , "RAE1","TCN2", "TCN2","SEMA4D_1","SEMA4D_2" ,"C1S"  ,"MSTRG.1804","MSTRG.32198","MSTRG.16351"   )
+roi_new$transcript_id <- paste0(roi_new$transcript_id ,"_selected")
 
 #plot regions
 for (i in 2:length(roi_new)){

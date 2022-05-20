@@ -23,7 +23,7 @@ anno <- colData(vst)
 library(RColorBrewer)
 col <- brewer.pal(12, "Paired")
 treat_col <- col[c(4,2,8,6)]
-names(treat_col)<-c( "DMSO", "SB939","DAC", "DACSB")
+names(treat_col)<-c( "DMSO", "DAC","SB939", "DACSB")
 comp_col <- col[c(2,8,6)]
 names(comp_col)<-c( "DAC_vs_DMSO", "SB939_vs_DMSO",  "DACandSB939_vs_DMSO")
 class_col <- c("gray", col[c(9,10)])

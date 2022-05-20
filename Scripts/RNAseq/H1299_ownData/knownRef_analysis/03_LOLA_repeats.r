@@ -1,4 +1,4 @@
-#Perform differential epression analysis of different contrasts
+s#Perform differential epression analysis of different contrasts
 #libraries
 library(DESeq2)
 library(ggpubr)
