@@ -60,3 +60,4 @@ cds_coordinates <- mclapply(cds$ID, function(i){
     x
 }, mc.cores=10)
 saveRDS(cds_coordinates, file.path( "/omics/groups/OE0219/internal/tinat/integration/peptidomics/comparison_gene_expression", "ORFs_genomic_location.rds"))
+cds_coordinates <- readRDS( file.path( "/omics/groups/OE0219/internal/tinat/integration/peptidomics/comparison_gene_expression", "ORFs_genomic_location.rds"))

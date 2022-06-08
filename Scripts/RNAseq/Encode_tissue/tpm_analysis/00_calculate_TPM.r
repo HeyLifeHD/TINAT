@@ -80,3 +80,8 @@ tpm_mean <- sapply(sample_anno_split, function(x){
     x
 })
 saveRDS(tpm_mean, file.path(results.dir, "tpm_meanTissue_from_counts.rds"))
+tpm_mean <- readRDS( file.path(results.dir, "tpm_meanTissue_from_counts.rds"))
+tpm_mean<- as.data.frame(tpm_mean)
+tpm_mean$Transcript_id <- NA
+tpm_mean$Transcript_id<- rownames(tpm_mean)
+  write.table(tpm_mean, file=file.path(results.dir, "tpm_mean.csv"),row.names =F, col.names = T , sep=", ", quote=FALSE)
