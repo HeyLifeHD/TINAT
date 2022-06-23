@@ -1,5 +1,4 @@
-#Perform differential epression analysis of different contrasts --> remove outliers
-
+#Perform differential epression analysis of different contrasts
 #libraries
 library(DESeq2)
 library(ggpubr)
@@ -16,7 +15,6 @@ library(randomcoloR)
 library(clusterProfiler)
 library(readxl)
 library(rtracklayer)
-set.seed(123)
 
 #function
 plotMeta <- function(excel_path, n=10, output_path, color="#CD534CFF", height=3.5, width=3.5){
@@ -44,67 +42,28 @@ geom_bar(aes(x=description, y=LogP, fill = "-log10(p.value)"), stat = "identity"
  dev.off()
 }
 
-#get color code
-library(RColorBrewer)
-col <- brewer.pal(12, "Paired")
-treat_col <- col[c(4,2,8,6)]
-#names(treat_col)<-c( "DMSO", "SB939","DAC", "DACSB")
-names(treat_col)<-c( "scr", "c1d1","c1d8", "c1d9")
-#comp_col <- col[c(2,8,6)]
-#names(comp_col)<-c( "DAC_vs_DMSO", "SB939_vs_DMSO",  "DACandSB939_vs_DMSO")
-class_col <- c("gray", col[c(9,10)])
-names(class_col)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
-ere_col <- col[c(1,12,5,7,3)]
-names(ere_col)<-  c("LINE", "LTR", "no ERE", "other", "SINE")
-exon_col <- c("darkgray", "whitesmoke")
-names(exon_col)<- c("multi-exonic", "mono-exonic")
-ltr_col <- brewer.pal(5, "Accent")
-names(ltr_col)<- c("LTR12","LTR12C","LTR12D","LTR12F", "no LTR12")
-#cell_col  <- brewer.pal(length(unique(colData(vst)$Patient_ID)), "Paired")
-#names(cell_col)<- as.character(unique(colData(vst)$Patient_ID))
-cell_col  <- c(brewer.pal(10, "Paired"), brewer.pal(4, "Dark2"))
-names(cell_col)<- as.character(unique(colData(vst)$Patient_ID))
-#anno
-anno_colors <- list(treatment=treat_col, Patient_ID= cell_col)
-anno <- colData(vst)
-annovst <- anno[,c("Patient_ID", "treatment" ), drop=FALSE]
-
-#Directories
-base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220607_AMLPatient_deNovoCellline_quantification_analysis/"
+#directories
+base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220319_cellline_FeatureCountsRepeats_analysis/"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
-PostDE.dir <- file.path(base_results.dir,"PostDE_subsetted")
-dir.create(PostDE.dir)
-#Read in Data
-dds <-readRDS(file.path(results.dir, "dds.rds"))
-#subset dds
-dds <- dds[,!colnames(dds) %in% c("A14001_c1d8", "A26004_c1d8", "A03005_c1d8") ]
-dds <- DESeq(dds)
-saveRDS(dds, file.path(results.dir,"dds_subsetted.rds"))
+PostDE.dir <- file.path(base_results.dir,"PostDE")
+
+#DESeq2 Analysis
+dds <- readRDS(file = file.path(results.dir,"dds_repFamily_group_subsetted.rds"))
 vst <- readRDS(file.path(results.dir, "vst_subsetted.rds"))
 anno <- colData(vst)
-dds <-readRDS(file.path(results.dir, "dds.rds"))
-anno <- readRDS("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/gffCompare.annotated.sorted_repeat_anno.rds")
 anno_original <-  readRDS("/omics/groups/OE0219/internal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.repeat_anno.rds")
-anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/tinat/220316_cellline_deNovo_assembly/gffCompare.mergedTranscripts.gtf.tmap"))
 #Take a look at design and annotation of samples
 design(dds)
 #Set specifications
-alpha <- 0.01 #set FDR cutoff
-lfc <- 2##set logfold2 cutoff
-
-#get class code information of de novo assembly, joint with number of exons
-anno_classi$class_code_simple  <- NA
-anno_classi$class_code_simple <- ifelse(anno_classi$class_code == "=", "known", NA)
-anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("s", "x", "i", "y", "p", "u"), "non-chimeric (novel)", anno_classi$class_code_simple)
-anno_classi$class_code_simple <- ifelse(anno_classi$class_code %in% c("c", "k", "m", "n", "j", "e", "o"), "chimeric (novel)", anno_classi$class_code_simple)
-anno_classi$transcript_id <- anno_classi$qry_id
+alpha <- 0.05 #set FDR cutoff
+lfc <- 0##set logfold2 cutoff
 
 #Running the differential expression 
 #set up all possible contrasts
 contrasts <- as.data.frame(combn(as.character(unique(colData(dds)$treatment)), 2))
-contrasts
+contrasts <- contrasts[c(2,1),]
 results <- list()
 for (i in 1:length(contrasts)) {
   results[[i]]<- results(dds, contrast=c("treatment",as.character(contrasts[1,i]),  as.character(contrasts[2,i])), alpha = alpha, lfcThreshold = lfc) #extract results of wanted comparison
@@ -123,40 +82,9 @@ names(contrasts)<- nam
 #Make a dataframe out of it
 DEG_results_list <- lapply(results, function(x){
   x<- as.data.frame(x)
-  x$transcript_id <- rownames(x)
+  x$gene_id <- rownames(x)
   x
 })
-
-#get average counts per group
-#counts <- counts(dds,normalized=TRUE)
-pheno <- colData(dds)
-# averageCounts <-data.frame(DMSO_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DMSO",])]), 
-#     DAC_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DAC",])]),
-#     SB939_Rep3_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="SB939",])]),
-#     DACandSB939_Rep3_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DACSB",])]))
-# DEG_results_list <- lapply(DEG_results_list, function(x){
-#     x <- cbind(x, averageCounts)
-#     x
-# })
-
-#add complete annotation
-anno_transcripts <- anno[anno$type =="transcript",]
-anno_genes_sub <- unique(as.data.frame(anno_transcripts)[, c("seqnames", "start", "end","strand","gene_id", "transcript_id", "dist_nearest_repeat", "nearest_repeat_repName", "nearest_repeat_repClass", "nearest_repeat_repFamily","nearest_LTR12repeat_repName","dist_nearest_LTR12repeat")])
-DEG_results_list <- lapply(DEG_results_list, function(x){
-  x <- dplyr::left_join(x, anno_genes_sub, by="transcript_id")
-  x <- dplyr::left_join(x, anno_classi,by="transcript_id")
-  rownames(x)<- x$transcript_id
-  x
-})
-
-#add original reference annotation
-anno_original_sub <- unique(as.data.frame(anno_original)[, c("transcript_id","transcript_type","gene_name" )])
-DEG_results_list <- lapply(DEG_results_list, function(x){
-  x <- dplyr::left_join(x, anno_original_sub, by="transcript_id")
-  rownames(x)<- x$transcript_id
-  x
-})
-
 #order by padjusted value
 DEG_results_list <- lapply(DEG_results_list, function(x){
   x[which(is.na(x$padj)),]$padj <- 1
@@ -165,20 +93,7 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
 })
 names(DEG_results_list) <- names(results)
 
-# #adjust direction
-# names(DEG_results_list)
-# DEG_results_list$DAC_vs_DMSO <- DEG_results_list$DMSO_vs_DAC
-# DEG_results_list$DAC_vs_DMSO$log2FoldChange <- -(DEG_results_list$DAC_vs_DMSO$log2FoldChange)
-# DEG_results_list$DMSO_vs_DAC <- NULL
 
-# DEG_results_list$SB939_vs_DMSO <- DEG_results_list$DMSO_vs_SB939
-# DEG_results_list$SB939_vs_DMSO$log2FoldChange <- -(DEG_results_list$SB939_vs_DMSO$log2FoldChange)
-# DEG_results_list$DMSO_vs_SB939 <- NULL
-lapply(DEG_results_list, head)
-temp <- lapply(DEG_results_list, function(x)x[which(x$dist_nearest_LTR12repeat==0),])
-lapply(temp, head)
-
-#save lists
 saveRDS(DEG_results_list, file.path(PostDE.dir, "DEG_results_group_list.rds"))
 #DEG_results_list<- readRDS(file.path(PostDE.dir, "DEG_results_group_list.rds"))
 
@@ -189,8 +104,8 @@ for (i in names(DEG_results_list)){
     DEG_results_list_exp[[i]]$padj <- round(DEG_results_list_exp[[i]]$padj, 4)
     DEG_results_list_exp[[i]]$log2FoldChange <- round(DEG_results_list_exp[[i]]$log2FoldChange, 4)
     dir.create(file.path(PostDE.dir, i))
-    data.table::fwrite(DEG_results_list_exp[[i]], file=file.path(PostDE.dir,i, "DEG.tsv"),row.names =F, col.names = T , sep="\t", quote=FALSE)
-    data.table::fwrite(DEG_results_list_exp[[i]], file=file.path(PostDE.dir,i, "DEG.csv"),row.names =F, col.names = T , sep=",", quote=FALSE)
+    write.table(DEG_results_list_exp[[i]], file=file.path(PostDE.dir,i, "DEG.tsv"),row.names =F, col.names = T , sep="\t", quote=FALSE)
+    write.table(DEG_results_list_exp[[i]], file=file.path(PostDE.dir,i, "DEG.csv"),row.names =F, col.names = T , sep=", ", quote=FALSE)
 }
 
 #Plot results in Volcano and MA plot {.tabset}
@@ -198,11 +113,11 @@ DEG_results_list_plot <- DEG_results_list
 DEG_results_list_plot <- lapply(DEG_results_list_plot, function(x){
   x <- as.data.frame(x)
   x$col <- "black"
-  x$col <- ifelse(test = x$padj < alpha & x$log2FoldChange>lfc, yes = "red", 
-                  no = ifelse(test = x$padj < alpha  & x$log2FoldChange<(-lfc), yes = "blue", "black"))
-  temp <- c(head(x[x$col=="red",]$symbol, 5), head(x[x$col=="blue",]$symbol, 5))
+  x$col <- ifelse(test = x$padj < 0.05 & x$log2FoldChange>1, yes = "red", 
+                  no = ifelse(test = x$padj < 0.05  & x$log2FoldChange<(-1), yes = "blue", "black"))
+  temp <- c(head(row.names(x[x$col=="red",]),10), head(row.names(x[x$col=="blue",]), 5))
   x$SYMBOL <- NA
-  x[x$symbol %in% temp,]$SYMBOL <- x[x$symbol %in% temp,]$symbol
+  x[row.names(x) %in% temp,]$SYMBOL <- row.names(x[row.names(x) %in% temp,])
   x$pvalue <-(-(log10(x$pvalue)))
   x$padj <- (-(log10(x$padj)))
   x
@@ -211,7 +126,6 @@ DEG_results_list_plot <- lapply(DEG_results_list_plot, function(x){
 lapply(DEG_results_list_plot, function(x){
     (table(x$col))
 })
-
 #Volcano Plot
 library(RColorBrewer)
 col <- brewer.pal(3,"RdBu")
@@ -224,15 +138,14 @@ for (i in names(DEG_results_list_plot)){
           ylab="- log10(P.adjusted)", #xlim=c(-0.5,0.5),
           color = "col" ,shape = 16, size = 1.5, palette=col, # Points color, shape and size
           add.params = list(color = "grey", fill = "lightgray"), legend.title="Significance",# main=i# Customize reg. line
-          #label="SYMBOL", repel = T, font.label = c( "black"), 
-) + rremove("legend") + geom_vline(xintercept=c(-lfc,lfc), linetype = 2) +geom_hline(yintercept=-log10(alpha), linetype = 2)
+          label="SYMBOL", repel = T, font.label = c( "black"), 
+) + rremove("legend") + geom_vline(xintercept=c(-1,1), linetype = 2) +geom_hline(yintercept=1.3, linetype = 2)
   pdf(file.path(PostDE.dir,i,"volcano.pdf"))
   print(Volcanos[[i]])
   dev.off()
   pdf(file.path(PostDE.dir,i,"volcano2.pdf"), height=3.5, width=3.5)
   print(Volcanos[[i]])
   dev.off()
-  print(i)
 }
 
 Volcanos<- list() 
@@ -243,11 +156,10 @@ for (i in names(DEG_results_list_plot)){
           color = "col" ,shape = 16, size = 1.5, palette=col, # Points color, shape and size
           add.params = list(color = "grey", fill = "lightgray"), legend.title="Significance",# main=i# Customize reg. line
           label="SYMBOL", repel = T, font.label = c( "black"), 
-) + rremove("legend") + geom_vline(xintercept=c(-lfc,lfc), linetype = 2) +geom_hline(yintercept=-log10(alpha), linetype = 2)
+) + rremove("legend") + geom_vline(xintercept=c(-1,1), linetype = 2) +geom_hline(yintercept=1.3, linetype = 2)
   pdf(file.path(PostDE.dir,i,"volcano3.pdf"), height=3.5, width=3.5)
   print(Volcanos[[i]])
   dev.off()
-  print(i)
 }
 
 #MA plot
@@ -256,17 +168,17 @@ for (i in names(DEG_results_list_plot)){
   MAs[[i]] <- ggscatter(DEG_results_list_plot[[i]], x ="baseMean", y =  "log2FoldChange",xlab="Mean of normalized counts",xscale="log10" ,
           ylab="Gene expression (log2 fold change)",
           color = "col",palette=col,shape = 16, size = 1.5, # Points color, shape and size
-          add.params = list(color = "grey", fill = "lightgray") #legend.title="Significance",# Customize reg. line
-          #label="SYMBOL", repel = TRUE#, legend = "right",
-)  + rremove("legend")
+          add.params = list(color = "grey", fill = "lightgray"), #legend.title="Significance",# Customize reg. line
+          label="SYMBOL", repel = TRUE#, legend = "right",
+          )+geom_hline(yintercept=c(-1, 1), linetype = 2) + rremove("legend")
   pdf(file.path(PostDE.dir,i,"MA.pdf"))
   print(MAs[[i]])
   dev.off()
   pdf(file.path(PostDE.dir,i,"MA2.pdf"), height=3.5, width=3.5)
   print(MAs[[i]])
   dev.off()
-  print(i)
 }
+
 MAs <- list()
 for (i in names(DEG_results_list_plot)){
   MAs[[i]] <- ggscatter(DEG_results_list_plot[[i]], x ="baseMean", y =  "log2FoldChange",xlab="Mean of normalized counts",xscale="log10" ,
@@ -274,17 +186,16 @@ for (i in names(DEG_results_list_plot)){
           color = "col",palette=col,shape = 16, size = 1.5, # Points color, shape and size
           add.params = list(color = "grey", fill = "lightgray"), #legend.title="Significance",# Customize reg. line
           label="SYMBOL", repel = TRUE#, legend = "right",
-) +geom_hline(yintercept=c(-lfc,lfc), linetype = 2) + rremove("legend")
+  )+geom_hline(yintercept=c(-1, 1), linetype = 2) + rremove("legend")
   pdf(file.path(PostDE.dir,i,"MA3.pdf"), height=3.5, width=3.5)
   print(MAs[[i]])
   dev.off()
-    print(i)
 }
 
 #heatmaps
 #define padj cutoff for plotting
-cutoff <- alpha
-l2fc <- lfc
+cutoff <- 0.05
+l2fc <- 1
 genes2plot <- lapply(DEG_results_list, function(x){
   x <- x[which(x$padj < cutoff & abs(x$log2FoldChange) >l2fc),]
   x <- rownames(x)
@@ -298,10 +209,29 @@ lapply(genes2plot, function(x)length(x))
 
 #heatmap
 mat_genes<- assay(vst)
+
+#get color code
+library(RColorBrewer)
+col <- brewer.pal(12, "Paired")
+treat_col <- col[c(4,2,8,6)]
+names(treat_col)<-c( "DMSO", "SB939","DAC", "DACSB")
+comp_col <- col[c(2,8,6)]
+names(comp_col)<-c( "DAC_vs_DMSO", "SB939_vs_DMSO",  "DACandSB939_vs_DMSO")
+class_col <- c("gray", col[c(9,10)])
+names(class_col)<- c("known",  "chimeric (novel)", "non-chimeric (novel)")
+ere_col <- col[c(1,12,5,7,3)]
+names(ere_col)<-  c("LINE", "LTR", "no ERE", "other", "SINE")
+exon_col <- c("darkgray", "whitesmoke")
+names(exon_col)<- c("multi-exonic", "mono-exonic")
+ltr_col <- brewer.pal(5, "Accent")
+names(ltr_col)<- c("LTR12","LTR12C","LTR12D","LTR12F", "no LTR12")
+cell_col  <- brewer.pal(length(unique(colData(vst)$cellline)), "Paired")
+names(cell_col)<- as.character(unique(colData(vst)$cellline))
+
 #anno
-anno_colors <- list(treatment=treat_col, Patient_ID= cell_col)
+anno_colors <- list(treatment=treat_col, cellline= cell_col)
 anno <- colData(vst)
-annovst <- anno[,c("Patient_ID", "treatment" ), drop=FALSE]
+annovst <- anno[,c("cellline", "treatment" ), drop=FALSE]
 
 
 heat<-list()
@@ -310,19 +240,17 @@ for (i in names(genes2plot)){
   #annorow <- ifelse(is.na(plot$symbol),rownames(plot), plot$symbol)
   annorow <- rownames(plot)
   heat[[i]]<- pheatmap(plot[, rownames(anno)], scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
-                       annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors
+                       annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors
                        ) 
   pdf(file.path(PostDE.dir,i,"Heat_DEG_reds.pdf"))
   print(heat[[i]])
   dev.off()
     heat[[i]]<- pheatmap(plot[, rownames(anno)], scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
-                       annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors,
+                       annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors,
                        clustering_distance_rows="correlation") 
   pdf(file.path(PostDE.dir,i,"Heat_correlation_DEG_reds.pdf"))
   print(heat[[i]])
   dev.off()
-    print(i)
-
 }
 
 #subset only groups of interest for heatmapa
@@ -332,7 +260,7 @@ for (i in names(genes2plot)){
   #annorow <- ifelse(is.na(plot$symbol),rownames(plot), plot$symbol)
   annorow <- rownames(plot)
 
-    comp_oi <- sapply(strsplit(i, "_vs_",fixed=TRUE), function(x)c(x[1], x[2]))
+    comp_oi <- sapply(strsplit(i, "_"), function(x)c(x[1], x[3]))
     heat[[i]]<- pheatmap(plot[,     rownames(anno[anno$treatment %in% comp_oi,])], 
     scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
                        annotation_col=as.data.frame(annovst),show_rownames=F,annotation_colors=anno_colors,
@@ -347,40 +275,20 @@ for (i in names(genes2plot)){
 DEG <- unique(unlist(genes2plot))
 length(DEG)
 plot <- mat_genes[which(rownames(mat_genes) %in% DEG ),]
+set.seed(123)
 p <- pheatmap(plot, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
                        annotation_col=as.data.frame(annovst),
-                       annotation_colors=anno_colors, show_rownames=F, clustering_distance_rows="correlation" ,
+                       annotation_colors=anno_colors, show_rownames=T, clustering_distance_rows="correlation" ,
                        #cutree_rows =5, 
                        file=file.path(PostDE.dir, "Heat_allDEG_correlation.pdf")
                        ) 
 p <- pheatmap(plot, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),
                        annotation_col=as.data.frame(annovst),
-                       annotation_colors=anno_colors, show_rownames=F, clustering_distance_rows="correlation" ,
+                       annotation_colors=anno_colors, show_rownames=T, clustering_distance_rows="correlation" ,
                        #cutree_rows =5, 
                        file=file.path(PostDE.dir, "Heat_allDEG_correlation_reds.pdf")
 ) 
-
-#plot venn diagram of upregualted genes
-#subset upregulated genes
-DEG_results_list_up <- lapply(DEG_results_list, function(x){
-    x<- x[which(x$padj < alpha & x$log2FoldChange>lfc),]
-    x
-})
-#get transcript ids
-DEG_results_list_up_id <- lapply(DEG_results_list_up, function(x)x$transcript_id)
-#DEG_results_list_up_id <- DEG_results_list_up_id[c( "DAC_vs_DMSO","SB939_vs_DMSO","DACSB_vs_DMSO")]
-pdf(file.path(PostDE.dir, "Venn_DEG_up.pdf"))
-ggVennDiagram(DEG_results_list_up_id, label_alpha = 0, category.names=names(DEG_results_list_up_id))+
-    rremove("legend") + 
-    theme(text = element_text(size = 8)) #+ 
-    #scale_fill_gradient(low="white",high = "#EF8A62")
-dev.off()
-# #metascape enrichment of the results of interest
-# nrow(DEG_results_list$DACandSB939_vs_DMSO[which(DEG_results_list$DACandSB939_vs_DMSO$padj < alpha & DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange>5),])
-# paste0(DEG_results_list$DACandSB939_vs_DMSO[which(DEG_results_list$DACandSB939_vs_DMSO$padj < alpha & DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange>5),]$gene_name, collapse=", ")
-
-
-# #plot heatmap with clusters
+ heatmap with clusters
 # dir.create(file.path(PostDE.dir,"cluster_anal"))
 # for(i in 4:8){
 # #for(i in c(6)){
@@ -630,20 +538,20 @@ dev.off()
 #   x
 # })
 # for(i in names(DEG_results_list_sub)){
-#     temp <- DEG_results_list_sub[[i]][which(abs(DEG_results_list_sub[[i]]$log2FoldChange)>1 & DEG_results_list_sub[[i]]$padj <alpha),]
+#     temp <- DEG_results_list_sub[[i]][which(abs(DEG_results_list_sub[[i]]$log2FoldChange)>1 & DEG_results_list_sub[[i]]$padj <0.05),]
 #     table <- as.data.frame(table(temp$direction))
 #     labs <- paste0(table$Var1,"\n(", round((table$Freq/sum(table$Freq)*100)),"%)\n", table$Freq)
 
 #     pdf(file.path(PostDE.dir,i,paste0("Direction_DEGs_sign_fc.pdf")), height=3.5, width=3.5)
-#     print(ggpie(table, "Freq", fill="Var1", palette=col[c(2,3)], label=labs, lab.pos = "in", main="DEG Analysis\nadj. p-value < alpha &\nabs. log2 fold-change > 1",  lab.font = c(5, "bold", "white")) + rremove("legend"))
+#     print(ggpie(table, "Freq", fill="Var1", palette=col[c(2,3)], label=labs, lab.pos = "in", main="DEG Analysis\nadj. p-value < 0.05 &\nabs. log2 fold-change > 1",  lab.font = c(5, "bold", "white")) + rremove("legend"))
 #     dev.off()
 
-#     temp <- DEG_results_list_sub[[i]][which(DEG_results_list_sub[[i]]$padj <alpha),]
+#     temp <- DEG_results_list_sub[[i]][which(DEG_results_list_sub[[i]]$padj <0.05),]
 #     table <- as.data.frame(table(temp$direction))
 #     labs <- paste0(table$Var1,"\n(", round((table$Freq/sum(table$Freq)*100)),"%)\n", table$Freq)
 
 #     pdf(file.path(PostDE.dir,i,paste0("Direction_DEGs_sign.pdf")), height=3.5, width=3.5)
-#     print(ggpie(table, "Freq", fill="Var1", palette=col[c(2,3)], label=labs, lab.pos = "in", main="DEG Analysis\nadj. p-value < alpha",  lab.font = c(5, "bold", "white")) + rremove("legend"))
+#     print(ggpie(table, "Freq", fill="Var1", palette=col[c(2,3)], label=labs, lab.pos = "in", main="DEG Analysis\nadj. p-value < 0.05",  lab.font = c(5, "bold", "white")) + rremove("legend"))
 #     dev.off()
 # }
 

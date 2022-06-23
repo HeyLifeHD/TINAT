@@ -37,20 +37,21 @@ plotPCA.alt <- function (object, intgroup = "condition", ntop = Inf, returnData 
   
 }
 #folder
-base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220622_AMLPatient_deNovoCellline_quantification_analysis_revised/"
+base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220622_AMLPatient_FeatureCountRepeat_analysis_revised/"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
 PostDE.dir <- file.path(base_results.dir,"PostDE")
 
 #DESeq2 Analysis
-dds <-readRDS(file.path(results.dir, "dds.rds"))
+dds <- readRDS(file = file.path(results.dir,"dds_repFamily_group.rds"))
 
 #Extracting transformed values
 vst <- vst(dds)
 anno <- colData(vst)
 saveRDS(vst,file = file.path(results.dir,"vst.rds"))
 #vst <- readRDS(file.path(results.dir,"vst.rds"))
+
 
 #get color code
 library(RColorBrewer)
@@ -80,12 +81,11 @@ annovst <- anno[,c("Patient_ID", "group" ), drop=FALSE]
 #plot pca
 pcaDatavst<- plotPCA(vst, intgroup =  colnames(anno), returnData =TRUE, ntop=Inf)
 percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
-col <- c("#00AFBB", "#E7B800", "#FC4E07", "gray")
 names(col) <- levels(colData(dds)$group)
 pdf(file.path(PreDE.dir, "PCA12.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "group", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -93,6 +93,7 @@ ggscatter(pcaDatavst, x="PC1", y="PC2",
             ellipse = F ,mean.point = FALSE,
             star.plot = F,  xlab=(paste0("PC1: ", percentvarvst[1], "% variance")), ylab=(paste0("PC2: ", percentvarvst[2], "% variance")) )
 dev.off()
+
 
 #pca of 5000 mv genes
 pcaDatavst<- plotPCA(vst, intgroup =  colnames(anno), returnData =TRUE, ntop=5000)
@@ -174,51 +175,36 @@ pdf(file.path(PreDE.dir, "Clustering_correlation.pdf"), height = 5, width = 5)
 dend %>% plot
 dev.off()
 
-#Sample Clustering correlation
-topVar<- head(order(rowVars(assay(vst)), decreasing=TRUE),  1000)
-matvst <- assay(vst)[topVar,]
-dissimilarity <- 1 - cor(matvst, use="pairwise.complete.obs")
-distance <- as.dist(dissimilarity)
-hrld<- hclust(distance)
-dend<- hrld%>% as.dendrogram 
-col1 <- hrld$labels
-names(col1)<- as.character(anno[col1,]$group)
-col1 <- col1[order.dendrogram(dend)]
-col1 <- treat_col[names(col1)]
-labels(dend)<- as.character(anno[labels(dend),]$Patient_ID)
-dend <- dend %>% 
-set("branches_lwd", 2) %>%
-set("labels_colors",col1) %>% 
-set("labels_cex", .6 )%>%
-set("leaves_pch", 19)%>% 
-set("leaves_cex", 1.5)%>% 
-set("leaves_col", col1)
-pdf(file.path(PreDE.dir, "Clustering_correlation_1000mvTrans.pdf"), height = 5, width = 5)
-dend %>% plot
-dev.off()
-
-#Gene cluster
 #Gene clustering: Heatmaps
 #500 most variable repeats
-topVar<- head(order(rowVars(assay(vst)), decreasing=TRUE),  1000)
-matvst <- assay(vst)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap1000vst_Scale.pdf"),height= 7)
+topVarrepeatsvst<- head(order(rowVars(assay(vst)), decreasing=TRUE),  1000)
+matvst <- assay(vst)[topVarrepeatsvst,]
+pdf(file.path(PreDE.dir,"Heatmap1000vst_Scale_repeats.pdf"),height= 7)
 pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
                        annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors)
 dev.off()
 
-topVar<- head(order(rowVars(assay(vst)), decreasing=TRUE),  100)
-matvst <- assay(vst)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap100vst_Scale.pdf"),height= 7)
+topVarrepeatsvst<- head(order(rowVars(assay(vst)), decreasing=TRUE),  100)
+matvst <- assay(vst)[topVarrepeatsvst,]
+pdf(file.path(PreDE.dir,"Heatmap100vst_Scale_repeats.pdf"),height= 7)
 pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst),
                        annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors, fontsize_row=5)
 dev.off()
 
-topVar<- head(order(rowVars(assay(vst)), decreasing=TRUE),  5000)
-matvst <- assay(vst)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap5000vst_Scale.pdf"),height= 7)
-pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst),
-                       annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors, fontsize_row=5)
+#only ltr
+vst_LTR <-  assay(vst)[grep("LTR12",rownames( assay(vst))),]
+
+pdf(file.path(PreDE.dir,"Heatmap_noScale_LTR12repeats.pdf"),height= 7)
+pheatmap(vst_LTR, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(vst_LTR),
+annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors)
+dev.off()
+
+
+vst_LTR <-  assay(vst)[rownames( assay(vst)) %in% c("LTR12C", "LTR12D"),]
+
+pdf(file.path(PreDE.dir,"Heatmap_noScale_LTR12CDrepeats.pdf"),height= 7)
+pheatmap(vst_LTR, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(vst_LTR),
+annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors)
 dev.off()
 
 
@@ -228,7 +214,9 @@ dev.off()
 
 
 #redo with removed batch effect
-BR<-removeBatchEffect(assay(vst), batch=colData(vst)$Patient_ID)
+modmat <- model.matrix(~ Patient_ID + group ,as.data.frame(colData(vst))[, c("Patient_ID", "group")])
+
+BR<-removeBatchEffect(assay(vst), batch=as.vector(colData(vst)$Patient_ID), design=modmat)
 vst_b <- SummarizedExperiment(assays =BR , colData=colData(vst))
 vst_b <- DESeqTransform(vst_b)
 
@@ -356,26 +344,34 @@ pdf(file.path(PreDE.dir, "Clustering_correlation_1000mvTrans_batchRemoved.pdf"),
 dend %>% plot
 dev.off()
 
-#Gene cluster
 #Gene clustering: Heatmaps
 #500 most variable repeats
-topVar<- head(order(rowVars(assay(vst_b)), decreasing=TRUE),  1000)
-matvst_b <- assay(vst_b)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap1000vst_b_Scale_batchRemoved.pdf"),height= 7)
-pheatmap(matvst_b, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
+topVarrepeatsvst<- head(order(rowVars(assay(vst_b)), decreasing=TRUE),  1000)
+matvst <- assay(vst)[topVarrepeatsvst,]
+pdf(file.path(PreDE.dir,"Heatmap1000vst_Scale_repeats_batchRemoved.pdf"),height= 7)
+pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
                        annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors)
 dev.off()
 
-topVar<- head(order(rowVars(assay(vst_b)), decreasing=TRUE),  100)
-matvst_b <- assay(vst_b)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap100vst_b_Scale_batchRemoved.pdf"),height= 7)
-pheatmap(matvst_b, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst_b),
+topVarrepeatsvst<- head(order(rowVars(assay(vst_b)), decreasing=TRUE),  100)
+matvst <- assay(vst)[topVarrepeatsvst,]
+pdf(file.path(PreDE.dir,"Heatmap100vst_Scale_repeats_batchRemoved.pdf"),height= 7)
+pheatmap(matvst, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst),
                        annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors, fontsize_row=5)
 dev.off()
 
-topVar<- head(order(rowVars(assay(vst_b)), decreasing=TRUE),  5000)
-matvst_b <- assay(vst_b)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap5000vst_b_Scale_batchRemoved.pdf"),height= 7)
-pheatmap(matvst_b, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst_b),
-                       annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors, fontsize_row=5)
+#only ltr
+vst_LTR <-  assay(vst)[grep("LTR12",rownames( assay(vst_b))),]
+
+pdf(file.path(PreDE.dir,"Heatmap_noScale_LTR12repeats_batchRemoved.pdf"),height= 7)
+pheatmap(vst_LTR, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(vst_LTR),
+annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors)
+dev.off()
+
+
+vst_LTR <-  assay(vst)[rownames( assay(vst_b)) %in% c("LTR12C", "LTR12D"),]
+
+pdf(file.path(PreDE.dir,"Heatmap_noScale_LTR12CDrepeats_batchRemoved.pdf"),height= 7)
+pheatmap(vst_LTR, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(vst_LTR),
+annotation_col=as.data.frame(annovst), show_rownames=T,annotation_colors=anno_colors)
 dev.off()

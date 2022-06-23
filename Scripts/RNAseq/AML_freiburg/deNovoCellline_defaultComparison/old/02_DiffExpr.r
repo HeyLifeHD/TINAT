@@ -46,9 +46,9 @@ geom_bar(aes(x=description, y=LogP, fill = "-log10(p.value)"), stat = "identity"
 #get color code
 library(RColorBrewer)
 col <- brewer.pal(12, "Paired")
-treat_col <- col[c(4,2)]
+treat_col <- col[c(4,2,8,6)]
 #names(treat_col)<-c( "DMSO", "SB939","DAC", "DACSB")
-names(treat_col)<-c( "pre_treatment", "post_treatment")
+names(treat_col)<-c( "scr", "c1d1","c1d8", "c1d9")
 #comp_col <- col[c(2,8,6)]
 #names(comp_col)<-c( "DAC_vs_DMSO", "SB939_vs_DMSO",  "DACandSB939_vs_DMSO")
 class_col <- c("gray", col[c(9,10)])
@@ -64,12 +64,12 @@ names(ltr_col)<- c("LTR12","LTR12C","LTR12D","LTR12F", "no LTR12")
 cell_col  <- c(brewer.pal(10, "Paired"), brewer.pal(4, "Dark2"))
 names(cell_col)<- as.character(unique(colData(vst)$Patient_ID))
 #anno
-anno_colors <- list(group=treat_col, Patient_ID= cell_col)
+anno_colors <- list(treatment=treat_col, Patient_ID= cell_col)
 anno <- colData(vst)
-annovst <- anno[,c("Patient_ID", "group" ), drop=FALSE]
+annovst <- anno[,c("Patient_ID", "treatment" ), drop=FALSE]
 
 #Directories
-base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220622_AMLPatient_deNovoCellline_quantification_analysis_revised/"
+base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220607_AMLPatient_deNovoCellline_quantification_analysis/"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
@@ -86,8 +86,8 @@ anno_classi <- as.data.frame(data.table::fread("/omics/groups/OE0219/internal/ti
 #Take a look at design and annotation of samples
 design(dds)
 #Set specifications
-alpha <- 0.05 #set FDR cutoff
-lfc <- 1##set logfold2 cutoff
+alpha <- 0.01 #set FDR cutoff
+lfc <- 2##set logfold2 cutoff
 
 #get class code information of de novo assembly, joint with number of exons
 anno_classi$class_code_simple  <- NA
@@ -98,11 +98,11 @@ anno_classi$transcript_id <- anno_classi$qry_id
 
 #Running the differential expression 
 #set up all possible contrasts
-contrasts <- as.data.frame(combn(as.character(unique(colData(dds)$group)), 2))
+contrasts <- as.data.frame(combn(as.character(unique(colData(dds)$treatment)), 2))
 contrasts
 results <- list()
 for (i in 1:length(contrasts)) {
-  results[[i]]<- results(dds, contrast=c("group",as.character(contrasts[1,i]),  as.character(contrasts[2,i])), alpha = alpha, lfcThreshold = lfc) #extract results of wanted comparison
+  results[[i]]<- results(dds, contrast=c("treatment",as.character(contrasts[1,i]),  as.character(contrasts[2,i])), alpha = alpha, lfcThreshold = lfc) #extract results of wanted comparison
   print(paste0( as.character(contrasts[1,i]), "_vs_",  as.character(contrasts[2,i])))
   print(summary(results[[i]]))
 }
@@ -170,13 +170,7 @@ names(DEG_results_list) <- names(results)
 # DEG_results_list$SB939_vs_DMSO$log2FoldChange <- -(DEG_results_list$SB939_vs_DMSO$log2FoldChange)
 # DEG_results_list$DMSO_vs_SB939 <- NULL
 lapply(DEG_results_list, head)
-temp <- lapply(DEG_results_list, function(x){
-    x <- x[which(x$dist_nearest_LTR12repeat==0),]
-    x <- x[which(x$padj < 0.05 &x$log2FoldChange>1),]
-    x
-    }
-)
-lapply(temp, rownames)
+temp <- lapply(DEG_results_list, function(x)x[which(x$dist_nearest_LTR12repeat==0),])
 lapply(temp, head)
 
 #save lists
@@ -299,6 +293,10 @@ lapply(genes2plot, function(x)length(x))
 
 #heatmap
 mat_genes<- assay(vst)
+#anno
+anno_colors <- list(treatment=treat_col, Patient_ID= cell_col)
+anno <- colData(vst)
+annovst <- anno[,c("Patient_ID", "treatment" ), drop=FALSE]
 
 
 heat<-list()
@@ -356,19 +354,21 @@ p <- pheatmap(plot, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues")
                        #cutree_rows =5, 
                        file=file.path(PostDE.dir, "Heat_allDEG_correlation_reds.pdf")
 ) 
-CTA <-  as.data.frame(data.table::fread(file.path(ext.dir,  "Cancer_Testis_Antigens.txt"), header=FALSE))
 
-genes2plot <- lapply(DEG_results_list, function(x){
-  x <- x[x$gene_name %in%CTA$V1,]
-  x <- rownames(x)
-  x
+#plot venn diagram of upregualted genes
+#subset upregulated genes
+DEG_results_list_up <- lapply(DEG_results_list, function(x){
+    x<- x[which(x$padj < alpha & x$log2FoldChange>lfc),]
+    x
 })
-
-topVar<- head(order(rowVars(assay(vst_b)[rownames(assay(vst_b))%in% genes2plot$post_treatment_vs_pre_treatment,]), decreasing=TRUE),  50)
-matvst_b <- assay(vst_b)[topVar,]
-pdf(file.path(PreDE.dir,"Heatmap_CTA50_vst_b_Scale_batchRemoved.pdf"),height= 7)
-pheatmap(matvst_b, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst_b),
-                       annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors, fontsize_row=5)
+#get transcript ids
+DEG_results_list_up_id <- lapply(DEG_results_list_up, function(x)x$transcript_id)
+#DEG_results_list_up_id <- DEG_results_list_up_id[c( "DAC_vs_DMSO","SB939_vs_DMSO","DACSB_vs_DMSO")]
+pdf(file.path(PostDE.dir, "Venn_DEG_up.pdf"))
+ggVennDiagram(DEG_results_list_up_id, label_alpha = 0, category.names=names(DEG_results_list_up_id))+
+    rremove("legend") + 
+    theme(text = element_text(size = 8)) #+ 
+    #scale_fill_gradient(low="white",high = "#EF8A62")
 dev.off()
 # #metascape enrichment of the results of interest
 # nrow(DEG_results_list$DACandSB939_vs_DMSO[which(DEG_results_list$DACandSB939_vs_DMSO$padj < alpha & DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange>5),])

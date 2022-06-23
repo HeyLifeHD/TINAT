@@ -37,7 +37,7 @@ plotPCA.alt <- function (object, intgroup = "condition", ntop = Inf, returnData 
   
 }
 #folder
-base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220622_AMLPatient_deNovoCellline_quantification_analysis_revised/"
+base.dir<- "/omics/groups/OE0219/internal/tinat/Cellline_panel/220607_AMLPatient_deNovoCellline_quantification_analysis/"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
@@ -55,9 +55,9 @@ saveRDS(vst,file = file.path(results.dir,"vst.rds"))
 #get color code
 library(RColorBrewer)
 col <- brewer.pal(12, "Paired")
-treat_col <- col[c(4,2)]
+treat_col <- col[c(4,2,8,6)]
 #names(treat_col)<-c( "DMSO", "SB939","DAC", "DACSB")
-names(treat_col)<-c( "pre_treatment", "post_treatment")
+names(treat_col)<-c( "scr", "c1d1","c1d8", "c1d9")
 #comp_col <- col[c(2,8,6)]
 #names(comp_col)<-c( "DAC_vs_DMSO", "SB939_vs_DMSO",  "DACandSB939_vs_DMSO")
 class_col <- c("gray", col[c(9,10)])
@@ -73,19 +73,19 @@ names(ltr_col)<- c("LTR12","LTR12C","LTR12D","LTR12F", "no LTR12")
 cell_col  <- c(brewer.pal(10, "Paired"), brewer.pal(4, "Dark2"))
 names(cell_col)<- as.character(unique(colData(vst)$Patient_ID))
 #anno
-anno_colors <- list(group=treat_col, Patient_ID= cell_col)
+anno_colors <- list(treatment=treat_col, Patient_ID= cell_col)
 anno <- colData(vst)
-annovst <- anno[,c("Patient_ID", "group" ), drop=FALSE]
+annovst <- anno[,c("Patient_ID", "treatment" ), drop=FALSE]
 
 #plot pca
 pcaDatavst<- plotPCA(vst, intgroup =  colnames(anno), returnData =TRUE, ntop=Inf)
 percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
 col <- c("#00AFBB", "#E7B800", "#FC4E07", "gray")
-names(col) <- levels(colData(dds)$group)
+names(col) <- levels(colData(dds)$treatment)
 pdf(file.path(PreDE.dir, "PCA12.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -100,7 +100,7 @@ percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA12_5000mvGenes.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -113,7 +113,7 @@ percentvarvst <- round(100* attr(pcaDatavst, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA12_1000mvGenes.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -128,7 +128,7 @@ percentvarvst.alt <- round(100* attr(pcaDatavst.alt, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA23.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst.alt, x="PC2", y="PC3",            
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -143,7 +143,7 @@ percentvarvst.alt <- round(100* attr(pcaDatavst.alt, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA23_5000mvGenes.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst.alt, x="PC2", y="PC3",            
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -159,7 +159,7 @@ distance <- as.dist(dissimilarity)
 hrld<- hclust(distance)
 dend<- hrld%>% as.dendrogram 
 col1 <- hrld$labels
-names(col1)<- as.character(anno[col1,]$group)
+names(col1)<- as.character(anno[col1,]$treatment)
 col1 <- col1[order.dendrogram(dend)]
 col1 <- treat_col[names(col1)]
 labels(dend)<- as.character(anno[labels(dend),]$Patient_ID)
@@ -182,7 +182,7 @@ distance <- as.dist(dissimilarity)
 hrld<- hclust(distance)
 dend<- hrld%>% as.dendrogram 
 col1 <- hrld$labels
-names(col1)<- as.character(anno[col1,]$group)
+names(col1)<- as.character(anno[col1,]$treatment)
 col1 <- col1[order.dendrogram(dend)]
 col1 <- treat_col[names(col1)]
 labels(dend)<- as.character(anno[labels(dend),]$Patient_ID)
@@ -240,11 +240,11 @@ vst_b <- readRDS(file.path(results.dir, "vst_b.rds"))
 pcaDatavst_b<- plotPCA(vst_b, intgroup =  colnames(anno), returnData =TRUE, ntop=Inf)
 percentvarvst_b <- round(100* attr(pcaDatavst_b, "percentVar"))
 col <- c("#00AFBB", "#E7B800", "#FC4E07", "gray")
-names(col) <- levels(colData(dds)$group)
+names(col) <- levels(colData(dds)$treatment)
 pdf(file.path(PreDE.dir, "PCA12_batchRemoved.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst_b, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -259,7 +259,7 @@ percentvarvst_b <- round(100* attr(pcaDatavst_b, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA12_5000mvGenes_batchRemoved.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst_b, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -272,7 +272,7 @@ percentvarvst_b <- round(100* attr(pcaDatavst_b, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA12_1000mvGenes_batchRemoved.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst_b, x="PC1", y="PC2",
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -287,7 +287,7 @@ percentvarvst_b.alt <- round(100* attr(pcaDatavst_b.alt, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA23_batchRemoved.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst_b.alt, x="PC2", y="PC3",            
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -302,7 +302,7 @@ percentvarvst_b.alt <- round(100* attr(pcaDatavst_b.alt, "percentVar"))
 pdf(file.path(PreDE.dir, "PCA23_5000mvGenes_batchRemoved.pdf"), height = 5, width = 6)
 ggscatter(pcaDatavst_b.alt, x="PC2", y="PC3",            
             size=5,
-            color = "group.1", 
+            color = "treatment", 
             shape= "Patient_ID",
             #label= "replicate",
             repel=TRUE,
@@ -318,7 +318,7 @@ distance <- as.dist(dissimilarity)
 hrld<- hclust(distance)
 dend<- hrld%>% as.dendrogram 
 col1 <- hrld$labels
-names(col1)<- as.character(anno[col1,]$group)
+names(col1)<- as.character(anno[col1,]$treatment)
 col1 <- col1[order.dendrogram(dend)]
 col1 <- treat_col[names(col1)]
 labels(dend)<- as.character(anno[labels(dend),]$Patient_ID)
@@ -341,7 +341,7 @@ distance <- as.dist(dissimilarity)
 hrld<- hclust(distance)
 dend<- hrld%>% as.dendrogram 
 col1 <- hrld$labels
-names(col1)<- as.character(anno[col1,]$group)
+names(col1)<- as.character(anno[col1,]$treatment)
 col1 <- col1[order.dendrogram(dend)]
 col1 <- treat_col[names(col1)]
 labels(dend)<- as.character(anno[labels(dend),]$Patient_ID)
@@ -379,3 +379,5 @@ pdf(file.path(PreDE.dir,"Heatmap5000vst_b_Scale_batchRemoved.pdf"),height= 7)
 pheatmap(matvst_b, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),labels_row=rownames(matvst_b),
                        annotation_col=as.data.frame(annovst), show_rownames=F,annotation_colors=anno_colors, fontsize_row=5)
 dev.off()
+
+
