@@ -37,6 +37,10 @@ cellline <- sapply(strsplit(sapply(files_sep, "[",11),"TINAT_", fixed=TRUE ),"["
 SampleID <- sapply(strsplit(sapply(files_sep, "[",16),"_R", fixed=TRUE ),"[",1)
 SampleID <- gsub("-",".", SampleID)
 sample_anno <- data.frame(Sample_ID=as.character(SampleID), cellline=cellline,treatment=treatment, replicate=as.factor(replicate))
+temp <- sample_anno
+temp$Sample_ID <- gsub(".", "-", sample_anno$Sample_ID, fixed=TRUE)
+temp <- temp[order(temp$Sample_ID),]
+write.table(temp, file.path(results.dir, "sample_anno.csv"), sep=";", row.names=FALSE, col.names=TRUE, quote=FALSE)
 rownames(sample_anno)<-  as.character(sample_anno$Sample_ID)
 #rename counts
 colnames(counts) <- sapply(strsplit(colnames(counts),"/"),"[",11)

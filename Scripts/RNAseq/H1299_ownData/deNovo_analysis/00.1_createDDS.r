@@ -23,7 +23,15 @@ replicate=c(rep(1, 4), rep(2, 4), rep(3, 4) )
 length(replicate)
 Sample_ID=as.character(paste0(treatment,paste0("_Rep", replicate)))
 sample_anno <- data.frame(Sample_ID=as.character(Sample_ID), treatment=treatment, replicate=as.factor(replicate))
+
+temp <- sample_anno
+temp$Sample_ID <- sapply(strsplit(colnames(counts), ".sorted"), "[", 1)
+temp$Sample_ID <- gsub(".", "-", temp$Sample_ID, fixed=TRUE)
+temp <- temp[order(temp$Sample_ID),]
+write.table(temp, file.path(results.dir, "sample_anno.csv"), sep=";", row.names=FALSE, col.names=TRUE, quote=FALSE)
+
 rownames(sample_anno)<-  as.character(sample_anno$Sample_ID)
+
 #rename counts
 colnames(counts) <-sample_anno$Sample_ID
 
