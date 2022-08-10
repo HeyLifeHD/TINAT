@@ -29,7 +29,7 @@ mkdir /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_cus
 gffcompare -R -r /omics/groups/OE0219/internal/tinat/raw_data_repo/references/gencode.v29lift37.annotation.gtf \
 -o /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/mergedTranscripts.gtf   
 #sort gff compare
-/home/heyj/tools/gff3sort/gff3sort.pl /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.gtf  >/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.sorted.gtf
+/home/heyj/tools/gff3sort/gff3sort.pl /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.gtf  > /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare/gffCompare.annotated.sorted.gtf
 
 #subset based on strnads
 /omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/gffCompare.annotated.sorted.gtf

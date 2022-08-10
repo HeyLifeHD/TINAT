@@ -23,7 +23,7 @@ cp  /omics/groups/OE0219/internal/tinat/Encode/220114_Encode_processing_test/rna
 cp  /omics/groups/OE0219/internal/tinat/Encode/220114_Encode_processing/design.csv /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref/
 
 export NXF_HOME=/omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref
-nextflow run nf-core/rnaseq -profile singularity -c rnaseq.config \
+nextflow run nf-core/rnaseq -profile singularity -c jjujm Æ0619 \
     --input /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref/design.csv \
     --outdir /omics/groups/OE0219/internal/tinat/Encode/220117_Encode_processing_H1299Ref/ \
     --fasta /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.fa \
