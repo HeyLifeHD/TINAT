@@ -43,7 +43,7 @@ geom_bar(aes(x=description, y=LogP, fill = "-log10(p.value)"), stat = "identity"
 }
 
 #Directories
-base.dir<- "/omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_analysis"
+base.dir<- "/omics/groups/OE0219/internal/tinat/mouse_project/220811_RNAseqSETB1KD_deNovoB16DACSB_analysis"
 base_results.dir <- file.path(base.dir, "results")
 results.dir<- file.path(base_results.dir , "tables")
 PreDE.dir <- file.path(base_results.dir,"PreDE")
@@ -53,7 +53,6 @@ PostDE.dir <- file.path(base_results.dir,"PostDE")
 dds <-readRDS(file.path(results.dir, "dds.rds"))
 vst <- readRDS(file.path(results.dir, "vst.rds"))
 anno <- colData(vst)
-dds <-readRDS(file.path(results.dir, "dds.rds"))
 anno <- readRDS("/omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAse_processing_deNovo/gffCompare.annotated.sorted_repeat_anno.rds")
 anno_original <-  import.gff2("/omics/groups/OE0219/internal/genomes/Mmusculus/mm10/rnaseq/gencode.vM19.annotation.gtf")
 #Take a look at design and annotation of samples
@@ -91,11 +90,8 @@ names(DEG_results_list)
 #get average counts per group
 counts <- counts(dds,normalized=TRUE)
 pheno <- colData(dds)
-averageCounts <-data.frame(DMSO_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DMSO",])]), 
-    DAC_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DAC",])]),
-    SB939_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="SB939",])]),
-    DACandSB939_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="DACSB",])]))
-head(averageCounts)
+averageCounts <-data.frame(SETB1KD_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="SETDB1",])]), 
+    control_mean=rowMeans(counts[,rownames(pheno[pheno$treatment=="control",])]))
 DEG_results_list <- lapply(DEG_results_list, function(x){
     x <- cbind(x, averageCounts)
     x
@@ -105,7 +101,7 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
 anno_transcripts <- anno[anno$type =="transcript",]
 anno_genes_sub <- unique(as.data.frame(anno_transcripts)[, c("seqnames", "start", "end","strand","gene_id", "transcript_id", "dist_nearest_repeat", "nearest_repeat_repName", "nearest_repeat_repClass", "nearest_repeat_repFamily")])
 DEG_results_list <- lapply(DEG_results_list, function(x){
-  x <- dplyr::left_join(x[,1:11], anno_genes_sub, by="transcript_id")
+  x <- dplyr::left_join(x, anno_genes_sub, by="transcript_id")
   rownames(x)<- x$transcript_id
   x
 })
@@ -125,19 +121,6 @@ DEG_results_list <- lapply(DEG_results_list, function(x){
   x
 })
 names(DEG_results_list) <- names(results)
-
-#adjust direction
-DEG_results_list$DAC_vs_DMSO <- DEG_results_list$DMSO_vs_DAC
-DEG_results_list$DAC_vs_DMSO$log2FoldChange <- -(DEG_results_list$DAC_vs_DMSO$log2FoldChange)
-DEG_results_list$DMSO_vs_DAC <- NULL
-
-DEG_results_list$SB939_vs_DMSO <- DEG_results_list$DMSO_vs_SB939
-DEG_results_list$SB939_vs_DMSO$log2FoldChange <- -(DEG_results_list$SB939_vs_DMSO$log2FoldChange)
-DEG_results_list$DMSO_vs_SB939 <- NULL
-
-DEG_results_list$DACandSB939_vs_DMSO <- DEG_results_list$DMSO_vs_DACSB
-DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange <- -(DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange)
-DEG_results_list$DMSO_vs_DACSB <- NULL
 
 
 
@@ -290,7 +273,6 @@ for (i in names(genes2plot)){
   annorow <- rownames(plot)
 
     comp_oi <- sapply(strsplit(i, "_vs_",fixed=TRUE), function(x)c(x[1], x[2]))
-    comp_oi<- gsub("DACandSB939", "DACSB",comp_oi)
     heat[[i]]<- pheatmap(plot[,     rownames(anno[anno$treatment %in% comp_oi,])], 
     scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues"),rev(hcl.colors(20,"Reds"))),#labels_row=annorow,
                        annotation_col=as.data.frame(annovst),show_rownames=F,annotation_colors=anno_colors,
@@ -319,21 +301,21 @@ p <- pheatmap(plot, scale="row", show_colnames=F,color= c(hcl.colors(20,"Blues")
                        file=file.path(PostDE.dir, "Heat_allDEG_correlation_reds.pdf")
 ) 
 
-#plot venn diagram of upregualted genes
-#subset upregulated genes
-DEG_results_list_up <- lapply(DEG_results_list, function(x){
-    x<- x[which(x$padj < alpha & x$log2FoldChange>lfc),]
-    xyes
-})
-#get transcript ids
-DEG_results_list_up_id <- lapply(DEG_results_list_up, function(x)x$transcript_id)
-DEG_results_list_up_id <- DEG_results_list_up_id[c( "DAC_vs_DMSO","SB939_vs_DMSO","DACandSB939_vs_DMSO")]
-pdf(file.path(PostDE.dir, "Venn_DEG_up.pdf"))
-ggVennDiagram::ggVennDiagram(DEG_results_list_up_id, label_alpha = 0, category.names=names(DEG_results_list_up_id))+
-    rremove("legend") + 
-    theme(text = element_text(size = 8)) #+ 
-    #scale_fill_gradient(low="white",high = "#EF8A62")
-dev.off()
+# #plot venn diagram of upregualted genes
+# #subset upregulated genes
+# DEG_results_list_up <- lapply(DEG_results_list, function(x){
+#     x<- x[which(x$padj < alpha & x$log2FoldChange>lfc),]
+#     xyes
+# })
+# #get transcript ids
+# DEG_results_list_up_id <- lapply(DEG_results_list_up, function(x)x$transcript_id)
+# DEG_results_list_up_id <- DEG_results_list_up_id[c( "DAC_vs_DMSO","SB939_vs_DMSO","DACandSB939_vs_DMSO")]
+# pdf(file.path(PostDE.dir, "Venn_DEG_up.pdf"))
+# ggVennDiagram::ggVennDiagram(DEG_results_list_up_id, label_alpha = 0, category.names=names(DEG_results_list_up_id))+
+#     rremove("legend") + 
+#     theme(text = element_text(size = 8)) #+ 
+#     #scale_fill_gradient(low="white",high = "#EF8A62")
+# dev.off()
 # #metascape enrichment of the results of interest
 # nrow(DEG_results_list$DACandSB939_vs_DMSO[which(DEG_results_list$DACandSB939_vs_DMSO$padj < alpha & DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange>5),])
 # paste0(DEG_results_list$DACandSB939_vs_DMSO[which(DEG_results_list$DACandSB939_vs_DMSO$padj < alpha & DEG_results_list$DACandSB939_vs_DMSO$log2FoldChange>5),]$gene_name, collapse=", ")

@@ -42,59 +42,12 @@ cd ./../../transcripts
 
 
 
-#create bigwigs
-conda activate deeptools
-mkdir  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/bigwig/
-for file in `ls  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/HISAT2/aligned_sorted/*.bam`;do
-    pathname="${file%.*}"
-    name=`basename $pathname`
-    bamCoverage -b $file \
-        -o  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/bigwig/${name}.bw \
-        -p 15
-    echo $name
-done
-
-#merge bigwigs
-conda deactivate
-conda activate kentUtils
-cd  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/bigwig/
-
-#DMSO
-bigWigMerge AS-641773-LR-57123.sorted.bw AS-641781-LR-57123.sorted.bw AS-641789-LR-57123.sorted.bw DMSO.bedGraph
-bedSort DMSO.bedGraph DMSO.bedGraph
-bedGraphToBigWig DMSO.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
-     DMSO.bigWig
-
-#DAC
-bigWigMerge AS-641775-LR-57123.sorted.bw AS-641783-LR-57123.sorted.bw AS-641791-LR-57123.bw DAC.bedGraph
-bedSort DAC.bedGraph DAC.bedGraph
-bedGraphToBigWig DAC.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
-     DAC.bigWig
-
-#SB939
-bigWigMerge AS-641777-LR-57123.sorted.bw AS-641785-LR-57123.bw AS-641793-LR-57123.sorted.bw SB939.bedGraph
-bedSort SB939.bedGraph SB939.bedGraph
-bedGraphToBigWig LTR12C_wG.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
-     SB939.bigWig
-
-
-#DACSB
-bigWigMerge AS-641779-LR-57123.sorted.bw AS-641787-LR-57123.bw AS-641795-LR-57123.sorted.bw DACSB939.bedGraph
-bedSort SB939.bedGraph DACSB939.bedGraph
-bedGraphToBigWig DACSB939.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
-     DACSB939.bigWig
-
-
 
 #get normalized bigwigs
 #create bigwigs
 conda activate deeptools
 mkdir  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/bigwig/
-for file in `ls  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/HISAT2/aligned_sorted/*.bam`;do
+for file in `ls /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/HISAT2/aligned_sorted/*.bam`;do
     pathname="${file%.*}"
     name=`basename $pathname`
     bamCoverage -b $file \
@@ -104,42 +57,37 @@ for file in `ls  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq
 done
 
 
--------
 #merge bigwigs
 conda deactivate
 conda activate kentUtils
 cd  /omics/groups/OE0219/internal/tinat/mouse_project/220809_RNAseq_deNovo_proecessing/bigwig/
 
 #DMSO
-bigWigMerge AS-641773-LR-57123.sorted.normalized.bw AS-641781-LR-57123.sorted.normalized.bw AS-641789-LR-57123.sorted.normalized.bw DMSO.normalized.bedGraph
+bigWigMerge -adjust=0.3333 AS-811002-LR-62189.sorted.normalized.bw AS-811010-LR-62189.sorted.normalized.bw AS-811018-LR-62189.sorted.normalized.bw DMSO.normalized.bedGraph
 bedSort DMSO.normalized.bedGraph DMSO.normalized.bedGraph
 bedGraphToBigWig DMSO.normalized.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
+ /omics/groups/OE0219/internal/genomes/Mmusculus/mm10/seq/mm10.chrom.sizes \
      DMSO.normalized.bigWig
 
 #DAC
-bigWigMerge AS-641775-LR-57123.sorted.normalized.bw AS-641783-LR-57123.sorted.normalized.bw AS-641791-LR-57123.sorted.normalized.bw DAC.normalized.bedGraph
+bigWigMerge -adjust=0.5 AS-811012-LR-62189.sorted.normalized.bw AS-811020-LR-62189.sorted.normalized.bw DAC.normalized.bedGraph
 bedSort DAC.normalized.bedGraph DAC.normalized.bedGraph
 bedGraphToBigWig DAC.normalized.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
+ /omics/groups/OE0219/internal/genomes/Mmusculus/mm10/seq/mm10.chrom.sizes \
      DAC.normalized.bigWig
 
 #SB939
-bigWigMerge AS-641777-LR-57123.sorted.normalized.bw AS-641785-LR-57123.sorted.normalized.bw AS-641793-LR-57123.sorted.normalized.bw SB939.normalized.bedGraph
+bigWigMerge -adjust=0.3333 AS-811006-LR-62189.sorted.normalized.bw AS-811014-LR-62189.sorted.normalized.bw AS-811022-LR-62189.sorted.normalized.bw SB939.normalized.bedGraph
 bedSort SB939.normalized.bedGraph SB939.normalized.bedGraph
 bedGraphToBigWig SB939.normalized.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
+ /omics/groups/OE0219/internal/genomes/Mmusculus/mm10/seq/mm10.chrom.sizes \
      SB939.normalized.bigWig
 
 
 #DACSB
-bigWigMerge AS-641779-LR-57123.sorted.normalized.bw AS-641787-LR-57123.sorted.normalized.bw AS-641795-LR-57123.sorted.normalized.bw DACSB939.normalized.bedGraph
+bigWigMerge  -adjust=0.5 AS-811008-LR-62189.sorted.normalized.bw AS-811016-LR-62189.sorted.normalized.bw  DACSB939.normalized.bedGraph
 bedSort DACSB939.normalized.bedGraph DACSB939.normalized.bedGraph
 bedGraphToBigWig DACSB939.normalized.bedGraph \
- /omics/groups/OE0219/internal/genomes/Hsapiens/hg19/seq/hg19.chrom.sizes \
+ /omics/groups/OE0219/internal/genomes/Mmusculus/mm10/seq/mm10.chrom.sizes \
      DACSB939.normalized.bigWig
-
-
-
-
 
