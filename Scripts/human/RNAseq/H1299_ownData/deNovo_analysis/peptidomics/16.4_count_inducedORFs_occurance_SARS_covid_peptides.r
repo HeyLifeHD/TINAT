@@ -48,23 +48,17 @@ names(exon_col)<- c("multi-exonic", "mono-exonic")
 ltr_col <- brewer.pal(5, "Accent")
 names(ltr_col)<- c("LTR12","LTR12C","LTR12D","LTR12F", "no LTR12")
 #peptidomics list
-peptides_new <- readRDS(file.path(output.dir, "peptides_list_new.rds"))
+#peptidomics list
+peptides_new <- read.csv("/omics/groups/OE0219/internal/tinat/integration/peptidomics/data/sars_covid_peptides.tsv", sep="\t")
+
+peptides_new_ORF <-AAStringSet(peptides_new$Sequence )
+names(peptides_new_ORF) <- peptides_new$Peptide.ID
+peptides_oi <- peptides_new_ORF
 
 #import ORF fasta
 ORFs <- readAAStringSet("/omics/groups/OE0219/internal/tinat/210726_shortRead_processing_deNovo_custom4/transdecoder_default_topStrand_8aa/longest_orfs_validated_induced_DACandSB939vsDMSO_forJens_novel.fa")
 uniprot <-  readAAStringSet(file.path("/omics/groups/OE0219/internal/tinat/integration/peptidomics/", "data", "190821_uniprot_homo sapiens.fasta"))
 
-
-#subset peptides that originatee from our orf list
-peptides_new_ORF <- peptides_new[peptides_new$Species =="ORFs",]
-#select 2/3 candidates
-length(unique(peptides_new_ORF[peptides_new_ORF$DAC_SB>60 & peptides_new_ORF$DMSO ==0,]$sequences))
-peptides_new_ORF_oi <- peptides_new_ORF[peptides_new_ORF$DAC_SB>60 & peptides_new_ORF$DMSO ==0,]
- 
-#match patterns
-## subset orfs
-peptides_oi <- AAStringSet(unique(peptides_new_ORF_oi$sequence))
-names(peptides_oi)<- unique(peptides_new_ORF_oi$sequence)
 #no mismatch
 pattern_match_noMM <- lapply(peptides_oi, function(x){
     pattern_match <- vmatchPattern(x, uniprot)
@@ -90,18 +84,18 @@ pattern_match_3MM <- lapply(peptides_oi, function(x){
 number_of_MM <- data.frame( 
     "Mismatches allowed: 0"=sapply(pattern_match_noMM, length),
     "Mismatches allowed: 1"=sapply(pattern_match_1MM, length),
-    "Mismatches allowed: 2"=sapply(pattern_match_2MM, length)#,
-    #"Mismatches allowed: 3"=sapply(pattern_match_3MM, length)
+    "Mismatches allowed: 2"=sapply(pattern_match_2MM, length),
+    "Mismatches allowed: 3"=sapply(pattern_match_3MM, length)
 )
 
 number_of_MM_long <- tidyr::pivot_longer(number_of_MM, cols=colnames(number_of_MM), names_to="Number_of_mismatches_allowed", values_to="Number_of_matches_with_UNIPROT")
 
-pdf(file.path(output.dir, "2of3DACSB_unique", "number_of_mismatches_uniprot.pdf"), height=5, width=7)
+pdf(file.path(output.dir, "SARS_Covid_peptide_match", "number_of_mismatches_uniprot.pdf"), height=5, width=7)
 gghistogram(number_of_MM_long[number_of_MM_long$Number_of_matches_with_UNIPROT!=0,],fill="gray",x= "Number_of_matches_with_UNIPROT" , facet.by="Number_of_mismatches_allowed", bins=50)
 dev.off()
 
 number_of_MM$peptide <- rownames(number_of_MM)
-write.table(number_of_MM, file.path(output.dir, "2of3DACSB_unique", "number_of_mismatches_uniprot.txt"),row.names = FALSE, col.names=TRUE, quote=FALSE, sep=", ")
+write.table(number_of_MM, file.path(output.dir, "SARS_Covid_peptide_match", "number_of_mismatches_uniprot.txt"),row.names = FALSE, col.names=TRUE, quote=FALSE, sep=", ")
 
 #generate detailed table
 pattern_match_noMM_df <- do.call("rbind",lapply(pattern_match_noMM, function(x){
@@ -134,14 +128,15 @@ pattern_match_3MM_df <- do.call("rbind",lapply(pattern_match_3MM, function(x){
 pattern_match_3MM_df$peptide <- rownames(pattern_match_3MM_df)
 pattern_match_3MM_df$Mismatches_allowed <- "3"
 
-pattern_match_df <- rbind(pattern_match_noMM_df, pattern_match_1MM_df, pattern_match_2MM_df)
-#pattern_match_df <- rbind(pattern_match_0MM_df, pattern_match_1MM_df, pattern_match_2MM_df, pattern_match_3MM_df)
+#pattern_match_df <- rbind(pattern_match_noMM_df, pattern_match_1MM_df, pattern_match_2MM_df)
+pattern_match_df <- rbind(pattern_match_noMM_df, pattern_match_1MM_df, pattern_match_2MM_df, pattern_match_3MM_df)
 pattern_match_df$peptide <- sapply(strsplit(pattern_match_df$peptide, ".", fixed=TRUE), "[",1)
 
-write.table(pattern_match_df, file.path(output.dir, "2of3DACSB_unique", "peptide_blast_uniprot.txt"),row.names = FALSE, col.names=TRUE, quote=FALSE, sep=", ")
+write.table(pattern_match_df, file.path(output.dir, "SARS_Covid_peptide_match", "peptide_blast_uniprot.txt"),row.names = FALSE, col.names=TRUE, quote=FALSE, sep=", ")
 
 
-scp -r heyj@172.22.62.205:/omics/groups/OE0219/internal/tinat/integration/peptidomics/comparison_gene_expression/2of3DACSB_unique ./
+scp -r heyj@172.22.62.205:/omics/groups/OE0219/internal/tinat/integration/peptidomics/comparison_gene_expression/SARS_Covid_peptide_match ./
+
 
 
 
